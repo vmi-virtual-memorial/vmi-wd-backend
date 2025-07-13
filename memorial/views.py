@@ -1,9 +1,12 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.db.models import Q
 from datetime import datetime
+import boto3
+from botocore.exceptions import ClientError
+from django.conf import settings
 from .models import Conflict, Person
 from .serializers import (
     ConflictSerializer, ConflictDetailSerializer,
@@ -104,7 +107,7 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
     
     @action(detail=True, methods=['get'])
     def pdf(self, request, pk=None):
-        """Get PDF for a person (placeholder for now)"""
+        """Get PDF for a person - generates presigned S3 URL"""
         person = self.get_object()
         
         if not person.pdf_key:
@@ -113,14 +116,33 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # TODO: Generate S3 presigned URL and redirect
-        # For now, return a placeholder response
-        return HttpResponse(
-            f"PDF placeholder for {person.display_name}\n"
-            f"S3 Key: {person.pdf_key}\n"
-            f"This will redirect to S3 presigned URL in production",
-            content_type="text/plain"
-        )
+        # Generate presigned URL
+        try:
+            s3_client = boto3.client(
+                's3',
+                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                region_name=settings.AWS_S3_REGION_NAME
+            )
+            
+            presigned_url = s3_client.generate_presigned_url(
+                'get_object',
+                Params={
+                    'Bucket': settings.AWS_STORAGE_BUCKET_NAME,
+                    'Key': person.pdf_key
+                },
+                ExpiresIn=3600  # URL expires in 1 hour
+            )
+            
+            # Redirect to the presigned URL
+            return HttpResponseRedirect(presigned_url)
+            
+        except ClientError as e:
+            print(f"Error generating presigned URL: {e}")
+            return Response(
+                {"error": "Failed to generate PDF URL"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 @api_view(['GET'])
