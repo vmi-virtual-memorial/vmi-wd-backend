@@ -5,15 +5,17 @@ from .models import Conflict, Person
 class PersonListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for listing people"""
     display_name = serializers.ReadOnlyField()
+    full_display_name = serializers.ReadOnlyField()
     
     class Meta:
         model = Person
-        fields = ['id', 'display_name', 'rank', 'unit']
+        fields = ['id', 'display_name', 'full_display_name', 'rank', 'unit', 'class_year']
 
 
 class PersonDetailSerializer(serializers.ModelSerializer):
     """Full details for individual person"""
     display_name = serializers.ReadOnlyField()
+    full_display_name = serializers.ReadOnlyField()
     conflict_name = serializers.CharField(source='conflict.name', read_only=True)
     pdf_url = serializers.SerializerMethodField()
     
@@ -21,8 +23,8 @@ class PersonDetailSerializer(serializers.ModelSerializer):
         model = Person
         fields = [
             'id', 'first_name', 'middle_name', 'last_name', 'suffix',
-            'display_name', 'rank', 'unit', 'date_of_death',
-            'conflict', 'conflict_name', 'pdf_key', 'pdf_url'
+            'display_name', 'full_display_name', 'class_year', 'rank', 'unit', 
+            'date_of_death', 'conflict', 'conflict_name', 'pdf_key', 'pdf_url'
         ]
     
     def get_pdf_url(self, obj):
@@ -31,6 +33,21 @@ class PersonDetailSerializer(serializers.ModelSerializer):
             # TODO: Generate actual S3 presigned URL
             return f"/api/memorial/persons/{obj.id}/pdf/"
         return None
+
+
+class PersonSearchSerializer(serializers.ModelSerializer):
+    """Serializer for search results"""
+    display_name = serializers.ReadOnlyField()
+    full_display_name = serializers.ReadOnlyField()
+    conflict_name = serializers.CharField(source='conflict.name', read_only=True)
+    conflict_id = serializers.IntegerField(source='conflict.id', read_only=True)
+    
+    class Meta:
+        model = Person
+        fields = [
+            'id', 'display_name', 'full_display_name', 'class_year',
+            'rank', 'unit', 'date_of_death', 'conflict_name', 'conflict_id'
+        ]
 
 
 class ConflictSerializer(serializers.ModelSerializer):

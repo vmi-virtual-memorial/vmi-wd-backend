@@ -31,6 +31,13 @@ class Person(models.Model):
     middle_name = models.CharField(max_length=100, blank=True)
     suffix = models.CharField(max_length=20, blank=True)  # Jr., III, etc.
     
+    # VMI info
+    class_year = models.IntegerField(
+        null=True, 
+        blank=True,
+        help_text="VMI graduation year (e.g., 1965)"
+    )
+    
     # Military info
     conflict = models.ForeignKey(
         Conflict, 
@@ -62,6 +69,8 @@ class Person(models.Model):
             full_name = f"{self.first_name} {self.middle_name} {self.last_name}"
         if self.suffix:
             full_name = f"{full_name} {self.suffix}"
+        if self.class_year:
+            full_name = f"{full_name} '{str(self.class_year)[2:]}"  # e.g., John Doe '65
         return full_name
     
     @property
@@ -77,6 +86,14 @@ class Person(models.Model):
         if self.suffix:
             name_parts.append(self.suffix)
         return ' '.join(name_parts)
+    
+    @property
+    def full_display_name(self):
+        """Display name with class year"""
+        name = self.display_name
+        if self.class_year:
+            name = f"{name} '{str(self.class_year)[2:]}"
+        return name
     
     def get_absolute_url(self):
         return reverse('person-detail', kwargs={'pk': self.pk})

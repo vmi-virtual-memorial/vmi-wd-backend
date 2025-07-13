@@ -1,11 +1,14 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
 from django.http import HttpResponse
+from django.db.models import Q
+from datetime import datetime
 from .models import Conflict, Person
 from .serializers import (
     ConflictSerializer, ConflictDetailSerializer,
-    PersonListSerializer, PersonDetailSerializer
+    PersonListSerializer, PersonDetailSerializer,
+    PersonSearchSerializer
 )
 
 
@@ -26,6 +29,8 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list':
             return PersonListSerializer
+        elif self.action == 'search':
+            return PersonSearchSerializer
         return PersonDetailSerializer
     
     def get_queryset(self):
@@ -33,7 +38,69 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
         conflict_id = self.request.query_params.get('conflict', None)
         if conflict_id is not None:
             queryset = queryset.filter(conflict_id=conflict_id)
-        return queryset
+        # Always order by last name, then first name for consistency
+        return queryset.order_by('last_name', 'first_name')
+    
+    @action(detail=False, methods=['get'])
+    def search(self, request):
+        """Search and filter people"""
+        queryset = Person.objects.all()
+        
+        # Name search (across all name fields)
+        search_term = request.query_params.get('q', '')
+        if search_term:
+            queryset = queryset.filter(
+                Q(first_name__icontains=search_term) |
+                Q(middle_name__icontains=search_term) |
+                Q(last_name__icontains=search_term) |
+                Q(suffix__icontains=search_term)
+            )
+        
+        # Class year filter (can be comma-separated)
+        class_years = request.query_params.get('class_year', '')
+        if class_years:
+            years = [int(y.strip()) for y in class_years.split(',') if y.strip().isdigit()]
+            if years:
+                queryset = queryset.filter(class_year__in=years)
+        
+        # Conflict filter (can be comma-separated)
+        conflict_ids = request.query_params.get('conflict', '')
+        if conflict_ids:
+            ids = [int(id.strip()) for id in conflict_ids.split(',') if id.strip().isdigit()]
+            if ids:
+                queryset = queryset.filter(conflict_id__in=ids)
+        
+        # Date range filter
+        date_from = request.query_params.get('date_from', '')
+        date_to = request.query_params.get('date_to', '')
+        no_date = request.query_params.get('no_date', '').lower() == 'true'
+        
+        if no_date:
+            queryset = queryset.filter(date_of_death__isnull=True)
+        else:
+            if date_from:
+                try:
+                    date_from_parsed = datetime.strptime(date_from, '%Y-%m-%d').date()
+                    queryset = queryset.filter(date_of_death__gte=date_from_parsed)
+                except ValueError:
+                    pass
+            
+            if date_to:
+                try:
+                    date_to_parsed = datetime.strptime(date_to, '%Y-%m-%d').date()
+                    queryset = queryset.filter(date_of_death__lte=date_to_parsed)
+                except ValueError:
+                    pass
+        
+        # Order results
+        queryset = queryset.order_by('last_name', 'first_name')
+        
+        # Paginate if needed (for now, return all for infinite scroll)
+        serializer = PersonSearchSerializer(queryset, many=True)
+        return Response({
+            'count': queryset.count(),
+            'results': serializer.data
+        })
     
     @action(detail=True, methods=['get'])
     def pdf(self, request, pk=None):
@@ -54,3 +121,30 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
             f"This will redirect to S3 presigned URL in production",
             content_type="text/plain"
         )
+
+
+@api_view(['GET'])
+def memorial_index(request):
+    """Get all conflicts with their casualties for the memorial index"""
+    conflicts = Conflict.objects.all()
+    data = []
+    
+    for conflict in conflicts:
+        casualties = Person.objects.filter(conflict=conflict).order_by('last_name', 'first_name')
+        conflict_data = ConflictSerializer(conflict).data
+        conflict_data['casualties'] = PersonListSerializer(casualties, many=True).data
+        data.append(conflict_data)
+    
+    return Response(data)
+
+
+@api_view(['GET'])
+def search_filters(request):
+    """Get available filter options for the search page"""
+    conflicts = Conflict.objects.all().values('id', 'name', 'start_year', 'end_year')
+    class_years = Person.objects.exclude(class_year__isnull=True).values_list('class_year', flat=True).distinct().order_by('class_year')
+    
+    return Response({
+        'conflicts': list(conflicts),
+        'class_years': list(class_years)
+    })

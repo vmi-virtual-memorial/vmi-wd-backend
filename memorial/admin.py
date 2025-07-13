@@ -12,14 +12,17 @@ class ConflictAdmin(admin.ModelAdmin):
 
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
-    list_display = ['display_name', 'conflict', 'rank', 'date_of_death']
-    list_filter = ['conflict', 'rank']
+    list_display = ['display_name', 'class_year', 'conflict', 'rank', 'date_of_death']
+    list_filter = ['conflict', 'class_year', 'rank']
     search_fields = ['first_name', 'last_name', 'unit']
     autocomplete_fields = ['conflict']
     
     fieldsets = (
         ('Name', {
             'fields': ('first_name', 'middle_name', 'last_name', 'suffix')
+        }),
+        ('VMI Information', {
+            'fields': ('class_year',)
         }),
         ('Military Information', {
             'fields': ('conflict', 'rank', 'unit', 'date_of_death')
