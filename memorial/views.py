@@ -183,3 +183,52 @@ def search_filters(request):
         'conflicts': list(conflicts),
         'class_years': list(class_years)
     })
+
+@api_view(['GET'])
+def test_s3_connection(request):
+    """Test S3 configuration in production"""
+    try:
+        import boto3
+        from django.conf import settings
+        
+        # Check if credentials are set
+        if not settings.AWS_ACCESS_KEY_ID:
+            return Response({
+                "error": "AWS_ACCESS_KEY_ID not configured",
+                "debug": settings.DEBUG,
+                "bucket": settings.AWS_STORAGE_BUCKET_NAME
+            })
+        
+        # Try to connect to S3
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+            region_name=settings.AWS_S3_REGION_NAME
+        )
+        
+        # List objects
+        response = s3_client.list_objects_v2(
+            Bucket=settings.AWS_STORAGE_BUCKET_NAME,
+            MaxKeys=5
+        )
+        
+        files = []
+        if 'Contents' in response:
+            files = [obj['Key'] for obj in response['Contents']]
+        
+        return Response({
+            "status": "success",
+            "bucket": settings.AWS_STORAGE_BUCKET_NAME,
+            "region": settings.AWS_S3_REGION_NAME,
+            "files_found": len(files),
+            "sample_files": files[:5],
+            "debug": settings.DEBUG
+        })
+        
+    except Exception as e:
+        return Response({
+            "error": str(e),
+            "type": type(e).__name__,
+            "debug": settings.DEBUG
+        }, status=500)
