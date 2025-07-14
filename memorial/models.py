@@ -48,6 +48,12 @@ class Person(models.Model):
     unit = models.CharField(max_length=200, blank=True)
     date_of_death = models.DateField(null=True, blank=True)
     
+    # Death details
+    death_description = models.TextField(
+        blank=True,
+        help_text="Description of how this person died (e.g., 'Killed in action during the Battle of Normandy')"
+    )
+    
     # Memorial content
     pdf_key = models.CharField(
         max_length=500, 

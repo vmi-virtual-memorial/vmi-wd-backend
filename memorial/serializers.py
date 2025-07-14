@@ -9,7 +9,7 @@ class PersonListSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Person
-        fields = ['id', 'display_name', 'full_display_name', 'rank', 'unit', 'class_year']
+        fields = ['id', 'display_name', 'full_display_name', 'rank', 'unit', 'class_year', 'death_description']
 
 
 class PersonDetailSerializer(serializers.ModelSerializer):
@@ -24,7 +24,8 @@ class PersonDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'first_name', 'middle_name', 'last_name', 'suffix',
             'display_name', 'full_display_name', 'class_year', 'rank', 'unit', 
-            'date_of_death', 'conflict', 'conflict_name', 'pdf_key', 'pdf_url'
+            'date_of_death', 'death_description', 'conflict', 'conflict_name', 
+            'pdf_key', 'pdf_url'
         ]
     
     def get_pdf_url(self, obj):

@@ -49,7 +49,7 @@ class ConflictAdmin(admin.ModelAdmin):
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
     form = PersonAdminForm
-    list_display = ['display_name', 'class_year', 'conflict', 'rank', 'date_of_death', 'has_pdf']
+    list_display = ['display_name', 'class_year', 'conflict', 'rank', 'date_of_death', 'has_pdf', 'has_description']
     list_filter = ['conflict', 'class_year', 'rank']
     search_fields = ['first_name', 'last_name', 'unit']
     autocomplete_fields = ['conflict']
@@ -64,6 +64,10 @@ class PersonAdmin(admin.ModelAdmin):
         ('Military Information', {
             'fields': ('conflict', 'rank', 'unit', 'date_of_death')
         }),
+        ('Death Details', {
+            'fields': ('death_description',),
+            'classes': ('wide',),  # Makes the text field wider
+        }),
         ('Memorial Content', {
             'fields': ('pdf_file', 'pdf_key'),
             'description': 'Upload a PDF or view the current S3 key'
@@ -76,3 +80,8 @@ class PersonAdmin(admin.ModelAdmin):
         return bool(obj.pdf_key)
     has_pdf.boolean = True
     has_pdf.short_description = 'Has PDF'
+    
+    def has_description(self, obj):
+        return bool(obj.death_description)
+    has_description.boolean = True
+    has_description.short_description = 'Has Description'
