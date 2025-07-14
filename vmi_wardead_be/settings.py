@@ -160,10 +160,13 @@ AWS_S3_SIGNATURE_VERSION = 's3v4'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Use S3 for media files in production
+# Use S3 for media files in production, local storage in development
 if not DEBUG and AWS_ACCESS_KEY_ID:
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+else:
+    # Use local file storage in development
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
 # Security settings for production
 if not DEBUG:

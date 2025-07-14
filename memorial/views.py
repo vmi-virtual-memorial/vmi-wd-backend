@@ -107,7 +107,7 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
     
     @action(detail=True, methods=['get'])
     def pdf(self, request, pk=None):
-        """Get PDF for a person - generates presigned S3 URL"""
+        """Get PDF for a person - generates presigned S3 URL or serves local file"""
         person = self.get_object()
         
         if not person.pdf_key:
@@ -116,7 +116,20 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
         
-        # Generate presigned URL
+        # In development, serve local files
+        if settings.DEBUG:
+            try:
+                from django.http import FileResponse
+                import os
+                file_path = os.path.join(settings.MEDIA_ROOT, person.pdf_key)
+                return FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+            except FileNotFoundError:
+                return Response(
+                    {"error": "PDF file not found"}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+        
+        # In production, generate presigned URL
         try:
             s3_client = boto3.client(
                 's3',

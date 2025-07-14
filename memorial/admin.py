@@ -22,8 +22,11 @@ class PersonAdminForm(forms.ModelForm):
         # Handle PDF upload
         pdf_file = self.cleaned_data.get('pdf_file')
         if pdf_file:
+            # Add environment prefix to separate dev/prod files
+            env_prefix = 'dev/' if settings.DEBUG else 'prod/'
+            
             # Create a meaningful filename
-            filename = f"memorials/{instance.last_name}_{instance.first_name}_{instance.id or 'new'}.pdf"
+            filename = f"{env_prefix}memorials/{instance.last_name}_{instance.first_name}_{instance.id or 'new'}.pdf"
             filename = filename.replace(' ', '_').lower()
             
             # Save to S3 (or local storage in development)
