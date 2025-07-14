@@ -108,7 +108,13 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=True, methods=['get'])
     def pdf(self, request, pk=None):
         """Get PDF for a person - generates presigned S3 URL or serves local file"""
-        person = self.get_object()
+        try:
+            person = self.get_object()
+        except Exception as e:
+            return Response(
+                {"error": "Person not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
         
         if not person.pdf_key:
             return Response(
@@ -138,6 +144,7 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
                 region_name=settings.AWS_S3_REGION_NAME
             )
             
+            # Generate presigned URL
             presigned_url = s3_client.generate_presigned_url(
                 'get_object',
                 Params={
@@ -147,8 +154,11 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
                 ExpiresIn=3600  # URL expires in 1 hour
             )
             
-            # Redirect to the presigned URL
-            return HttpResponseRedirect(presigned_url)
+            # Return JSON with the URL instead of redirecting
+            return Response({
+                'pdf_url': presigned_url,
+                'filename': f"{person.last_name}_{person.first_name}_memorial.pdf"
+            })
             
         except ClientError as e:
             print(f"Error generating presigned URL: {e}")
