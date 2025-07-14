@@ -23,12 +23,23 @@ class PersonAdminForm(forms.ModelForm):
         # Handle PDF upload
         pdf_file = self.cleaned_data.get('pdf_file')
         if pdf_file:
+            # Save instance first to get an ID if it's new
+            if not instance.id:
+                instance.save()
+            
             # Add environment prefix to separate dev/prod files
             env_prefix = 'dev/' if settings.DEBUG else 'prod/'
             
-            # Create a meaningful filename
-            filename = f"{env_prefix}memorials/{instance.last_name}_{instance.first_name}_{instance.id or 'new'}.pdf"
+            # Create a meaningful filename with actual ID
+            filename = f"{env_prefix}memorials/{instance.last_name}_{instance.first_name}_{instance.id}.pdf"
             filename = filename.replace(' ', '_').lower()
+            
+            # Delete old file if pdf_key already exists and is different
+            if instance.pdf_key and instance.pdf_key != filename:
+                try:
+                    default_storage.delete(instance.pdf_key)
+                except Exception:
+                    pass  # Ignore errors when deleting old files
             
             # Save to S3 (or local storage in development)
             path = default_storage.save(filename, pdf_file)
