@@ -2,6 +2,7 @@
 from django.contrib import admin
 from django import forms
 from django.core.files.storage import default_storage
+from django.conf import settings
 from .models import Conflict, Person
 import os
 
