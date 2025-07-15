@@ -41,8 +41,16 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
         conflict_id = self.request.query_params.get('conflict', None)
         if conflict_id is not None:
             queryset = queryset.filter(conflict_id=conflict_id)
-        # Always order by last name, then first name for consistency
-        return queryset.order_by('last_name', 'first_name')
+        
+        # Allow ordering by different fields via query param
+        order_by = self.request.query_params.get('order_by', 'name')
+        
+        if order_by == 'class_year':
+            # Order by class year (nulls last), then name
+            return queryset.order_by('class_year', 'last_name', 'first_name')
+        else:
+            # Default ordering by name
+            return queryset.order_by('last_name', 'first_name')
     
     @action(detail=False, methods=['get'])
     def search(self, request):
@@ -175,7 +183,12 @@ def memorial_index(request):
     data = []
     
     for conflict in conflicts:
-        casualties = Person.objects.filter(conflict=conflict).order_by('last_name', 'first_name')
+        # Order by class year first (nulls last), then by name
+        # Use raw SQL ordering to put nulls last
+        casualties = Person.objects.filter(conflict=conflict).extra(
+            select={'class_year_null': 'class_year IS NULL'},
+            order_by=['class_year_null', 'class_year', 'last_name', 'first_name']
+        )
         conflict_data = ConflictSerializer(conflict).data
         conflict_data['casualties'] = PersonListSerializer(casualties, many=True).data
         data.append(conflict_data)
