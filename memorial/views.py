@@ -39,15 +39,21 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         conflict_id = self.request.query_params.get('conflict', None)
+        
         if conflict_id is not None:
             queryset = queryset.filter(conflict_id=conflict_id)
+            # For conflict-specific queries, order by class year (nulls last), then name
+            return queryset.extra(
+                select={'class_year_null': 'class_year IS NULL'},
+                order_by=['class_year_null', '-class_year', 'last_name', 'first_name']
+            )
         
         # Allow ordering by different fields via query param
         order_by = self.request.query_params.get('order_by', 'name')
         
         if order_by == 'class_year':
             # Order by class year (nulls last), then name
-            return queryset.order_by('class_year', 'last_name', 'first_name')
+            return queryset.order_by('-class_year', 'last_name', 'first_name')
         else:
             # Default ordering by name
             return queryset.order_by('last_name', 'first_name')
@@ -103,8 +109,11 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
                 except ValueError:
                     pass
         
-        # Order results
-        queryset = queryset.order_by('last_name', 'first_name')
+        # Order results - by class year (descending) then name
+        queryset = queryset.extra(
+            select={'class_year_null': 'class_year IS NULL'},
+            order_by=['class_year_null', '-class_year', 'last_name', 'first_name']
+        )
         
         # Paginate if needed (for now, return all for infinite scroll)
         serializer = PersonSearchSerializer(queryset, many=True)
