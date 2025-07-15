@@ -184,10 +184,10 @@ def memorial_index(request):
     
     for conflict in conflicts:
         # Order by class year first (nulls last), then by name
-        # Use raw SQL ordering to put nulls last
+        # Use descending order for class year so older graduates appear first
         casualties = Person.objects.filter(conflict=conflict).extra(
             select={'class_year_null': 'class_year IS NULL'},
-            order_by=['class_year_null', 'class_year', 'last_name', 'first_name']
+            order_by=['class_year_null', '-class_year', 'last_name', 'first_name']
         )
         conflict_data = ConflictSerializer(conflict).data
         conflict_data['casualties'] = PersonListSerializer(casualties, many=True).data
