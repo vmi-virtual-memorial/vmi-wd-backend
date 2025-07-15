@@ -16,6 +16,22 @@ class PersonAdminForm(forms.ModelForm):
     class Meta:
         model = Person
         fields = '__all__'
+        widgets = {
+            'death_description': forms.Textarea(attrs={'rows': 4, 'cols': 80}),
+            'date_of_death': forms.DateInput(attrs={'type': 'date'}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Add help text for date fields
+        self.fields['date_of_death'].help_text = (
+            "Enter the full date. Use January 1st for year-only dates, "
+            "and the 1st of the month for month-year dates."
+        )
+        self.fields['death_date_precision'].help_text = (
+            "Select the precision of the date entered above. "
+            "This controls how the date is displayed on the site."
+        )
     
     def save(self, commit=True):
         instance = super().save(commit=False)
@@ -60,8 +76,8 @@ class ConflictAdmin(admin.ModelAdmin):
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
     form = PersonAdminForm
-    list_display = ['display_name', 'class_year', 'conflict', 'rank', 'date_of_death', 'has_pdf', 'has_description']
-    list_filter = ['conflict', 'class_year', 'rank']
+    list_display = ['display_name', 'class_year', 'conflict', 'rank', 'get_death_date_display', 'has_pdf', 'has_description']
+    list_filter = ['conflict', 'class_year', 'rank', 'death_date_precision']
     search_fields = ['first_name', 'last_name', 'unit']
     autocomplete_fields = ['conflict']
     
@@ -73,7 +89,11 @@ class PersonAdmin(admin.ModelAdmin):
             'fields': ('class_year',)
         }),
         ('Military Information', {
-            'fields': ('conflict', 'rank', 'unit', 'date_of_death')
+            'fields': ('conflict', 'rank', 'unit')
+        }),
+        ('Death Information', {
+            'fields': ('date_of_death', 'death_date_precision'),
+            'description': 'For partial dates: Use January 1st for year-only, and the 1st of the month for month-year dates.'
         }),
         ('Death Details', {
             'fields': ('death_description',),
@@ -86,6 +106,12 @@ class PersonAdmin(admin.ModelAdmin):
     )
     
     readonly_fields = ['pdf_key']
+    
+    def get_death_date_display(self, obj):
+        """Display death date in list view"""
+        return obj.death_date_display or 'Unknown'
+    get_death_date_display.short_description = 'Date of Death'
+    get_death_date_display.admin_order_field = 'date_of_death'
     
     def has_pdf(self, obj):
         return bool(obj.pdf_key)

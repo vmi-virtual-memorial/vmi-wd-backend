@@ -48,6 +48,19 @@ class Person(models.Model):
     unit = models.CharField(max_length=200, blank=True)
     date_of_death = models.DateField(null=True, blank=True)
     
+    # Date precision field
+    death_date_precision = models.CharField(
+        max_length=10,
+        choices=[
+            ('day', 'Day'),
+            ('month', 'Month'),
+            ('year', 'Year'),
+        ],
+        default='day',
+        blank=True,
+        help_text="Precision of the death date (year only, month and year, or full date)"
+    )
+    
     # Death details
     death_description = models.TextField(
         blank=True,
@@ -100,6 +113,19 @@ class Person(models.Model):
         if self.class_year:
             name = f"{name} '{str(self.class_year)[2:]}"
         return name
+    
+    @property
+    def death_date_display(self):
+        """Display death date according to precision"""
+        if not self.date_of_death:
+            return None
+        
+        if self.death_date_precision == 'year':
+            return str(self.date_of_death.year)
+        elif self.death_date_precision == 'month':
+            return self.date_of_death.strftime('%B %Y')
+        else:  # 'day' - full precision
+            return self.date_of_death.strftime('%B %d, %Y')
     
     def get_absolute_url(self):
         return reverse('person-detail', kwargs={'pk': self.pk})

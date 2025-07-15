@@ -6,10 +6,11 @@ class PersonListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for listing people"""
     display_name = serializers.ReadOnlyField()
     full_display_name = serializers.ReadOnlyField()
+    death_date_display = serializers.ReadOnlyField()
     
     class Meta:
         model = Person
-        fields = ['id', 'display_name', 'full_display_name', 'rank', 'unit', 'class_year', 'death_description']
+        fields = ['id', 'display_name', 'full_display_name', 'rank', 'unit', 'class_year', 'death_description', 'death_date_display']
 
 
 class PersonDetailSerializer(serializers.ModelSerializer):
@@ -18,13 +19,15 @@ class PersonDetailSerializer(serializers.ModelSerializer):
     full_display_name = serializers.ReadOnlyField()
     conflict_name = serializers.CharField(source='conflict.name', read_only=True)
     pdf_url = serializers.SerializerMethodField()
+    death_date_display = serializers.ReadOnlyField()
     
     class Meta:
         model = Person
         fields = [
             'id', 'first_name', 'middle_name', 'last_name', 'suffix',
             'display_name', 'full_display_name', 'class_year', 'rank', 'unit', 
-            'date_of_death', 'death_description', 'conflict', 'conflict_name', 
+            'date_of_death', 'death_date_precision', 'death_date_display', 
+            'death_description', 'conflict', 'conflict_name', 
             'pdf_key', 'pdf_url'
         ]
     
@@ -42,12 +45,14 @@ class PersonSearchSerializer(serializers.ModelSerializer):
     full_display_name = serializers.ReadOnlyField()
     conflict_name = serializers.CharField(source='conflict.name', read_only=True)
     conflict_id = serializers.IntegerField(source='conflict.id', read_only=True)
+    death_date_display = serializers.ReadOnlyField()
     
     class Meta:
         model = Person
         fields = [
             'id', 'display_name', 'full_display_name', 'class_year',
-            'rank', 'unit', 'date_of_death', 'conflict_name', 'conflict_id'
+            'rank', 'unit', 'date_of_death', 'death_date_display', 
+            'conflict_name', 'conflict_id'
         ]
 
 
