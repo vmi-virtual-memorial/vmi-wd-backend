@@ -1,18 +1,36 @@
-from rest_framework import viewsets, status
-from rest_framework.decorators import action, api_view
+from rest_framework import viewsets, status, permissions
+from rest_framework.decorators import action, api_view, permission_classes, authentication_classes, parser_classes
 from rest_framework.response import Response
-from django.http import HttpResponse, HttpResponseRedirect
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.middleware.csrf import get_token
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.db.models import Q
+from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import UploadedFile
 from datetime import datetime
 import boto3
 from botocore.exceptions import ClientError
 from django.conf import settings
-from .models import Conflict, Person
+from PIL import Image
+import io
+
+from .models import Conflict, Person, Contribution
 from .serializers import (
     ConflictSerializer, ConflictDetailSerializer,
     PersonListSerializer, PersonDetailSerializer,
-    PersonSearchSerializer
+    PersonSearchSerializer, PersonDetailSerializerWithContributions,
+    ContributionSerializer, ContributionCreateSerializer,
+    ContributionPublicSerializer, ContributionReviewSerializer
 )
+
+
+# Constants for contribution validation
+MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB
+ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+MAX_IMAGE_DIMENSIONS = (4000, 4000)  # Max width/height
 
 
 class ConflictViewSet(viewsets.ReadOnlyModelViewSet):
@@ -34,7 +52,7 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
             return PersonListSerializer
         elif self.action == 'search':
             return PersonSearchSerializer
-        return PersonDetailSerializer
+        return PersonDetailSerializerWithContributions
     
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -42,20 +60,16 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
         
         if conflict_id is not None:
             queryset = queryset.filter(conflict_id=conflict_id)
-            # For conflict-specific queries, order by class year ascending (earliest first), then name
             return queryset.extra(
                 select={'class_year_null': 'class_year IS NULL'},
                 order_by=['class_year_null', 'class_year', 'last_name', 'first_name']
             )
         
-        # Allow ordering by different fields via query param
         order_by = self.request.query_params.get('order_by', 'name')
         
         if order_by == 'class_year':
-            # Order by class year ascending (earliest first), then name
             return queryset.order_by('class_year', 'last_name', 'first_name')
         else:
-            # Default ordering by name
             return queryset.order_by('last_name', 'first_name')
     
     @action(detail=False, methods=['get'])
@@ -109,13 +123,11 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
                 except ValueError:
                     pass
         
-        # Order results - by class year ascending (earliest first) then name
         queryset = queryset.extra(
             select={'class_year_null': 'class_year IS NULL'},
             order_by=['class_year_null', 'class_year', 'last_name', 'first_name']
         )
         
-        # Paginate if needed (for now, return all for infinite scroll)
         serializer = PersonSearchSerializer(queryset, many=True)
         return Response({
             'count': queryset.count(),
@@ -146,7 +158,6 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
                 import os
                 file_path = os.path.join(settings.MEDIA_ROOT, person.pdf_key)
                 response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
-                # FIXED: Allow iframe embedding for PDF viewer
                 response['X-Frame-Options'] = 'SAMEORIGIN'
                 return response
             except FileNotFoundError:
@@ -164,7 +175,6 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
                 region_name=settings.AWS_S3_REGION_NAME
             )
             
-            # Generate presigned URL
             presigned_url = s3_client.generate_presigned_url(
                 'get_object',
                 Params={
@@ -174,19 +184,155 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
                 ExpiresIn=3600  # URL expires in 1 hour
             )
             
-            # FIXED: Return a redirect response instead of JSON
-            # This allows the iframe to load the PDF directly from S3
             response = HttpResponseRedirect(presigned_url)
-            # Allow iframe embedding for PDF viewer
             response['X-Frame-Options'] = 'SAMEORIGIN'
             return response
             
         except ClientError as e:
-            print(f"Error generating presigned URL: {e}")
             return Response(
                 {"error": "Failed to generate PDF URL"}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+    
+    @action(detail=True, methods=['get'])
+    def contributions(self, request, pk=None):
+        """Get approved contributions for a person"""
+        person = self.get_object()
+        contributions = person.contributions.filter(status='approved')
+        serializer = ContributionPublicSerializer(contributions, many=True)
+        return Response({
+            'count': contributions.count(),
+            'results': serializer.data
+        })
+
+
+class ContributionViewSet(viewsets.ModelViewSet):
+    """API endpoints for contributions - Admin only except for creation"""
+    queryset = Contribution.objects.all()
+    parser_classes = (MultiPartParser, FormParser)
+    
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return ContributionCreateSerializer
+        elif self.action == 'review':
+            return ContributionReviewSerializer
+        return ContributionSerializer
+    
+    def get_permissions(self):
+        """
+        Anyone can create contributions (with throttling)
+        Only admin can list, update, or delete
+        """
+        if self.action == 'create':
+            return [permissions.AllowAny()]
+        return [permissions.IsAdminUser()]
+    
+    def get_throttles(self):
+        """Apply throttling to creation"""
+        if self.action == 'create':
+            return [AnonRateThrottle()]
+        return []
+    
+    def validate_image(self, image_file):
+        """Validate uploaded image"""
+        if image_file.size > MAX_IMAGE_SIZE:
+            raise ValidationError(f"Image size must be less than {MAX_IMAGE_SIZE // 1024 // 1024}MB")
+        
+        if image_file.content_type not in ALLOWED_IMAGE_TYPES:
+            raise ValidationError(f"Image type must be one of: {', '.join(ALLOWED_IMAGE_TYPES)}")
+        
+        try:
+            img = Image.open(image_file)
+            img.verify()
+            
+            image_file.seek(0)
+            img = Image.open(image_file)
+            
+            if img.width > MAX_IMAGE_DIMENSIONS[0] or img.height > MAX_IMAGE_DIMENSIONS[1]:
+                raise ValidationError(
+                    f"Image dimensions must be less than {MAX_IMAGE_DIMENSIONS[0]}x{MAX_IMAGE_DIMENSIONS[1]}"
+                )
+            
+            image_file.seek(0)
+            
+        except Exception as e:
+            raise ValidationError(f"Invalid image file: {str(e)}")
+    
+    def create(self, request, *args, **kwargs):
+        """Create a new contribution with validation"""
+        person_id = self.kwargs.get('person_pk')
+        
+        if not person_id:
+            return Response(
+                {"error": "Person ID not found in URL"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            person = Person.objects.get(pk=person_id)
+        except Person.DoesNotExist:
+            return Response(
+                {"error": "Person not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        # Validate image if provided
+        image = request.FILES.get('content_image')
+        if image:
+            try:
+                self.validate_image(image)
+            except ValidationError as e:
+                return Response(
+                    {"error": str(e)}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        contribution = serializer.save(person=person)
+        
+        return Response(
+            ContributionSerializer(contribution).data,
+            status=status.HTTP_201_CREATED
+        )
+    
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def review(self, request, pk=None):
+        """Approve or reject a contribution"""
+        contribution = self.get_object()
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        
+        action = serializer.validated_data['action']
+        
+        if action == 'approve':
+            contribution.approve(request.user)
+        else:  # reject
+            rejection_reason = serializer.validated_data.get('rejection_reason', '')
+            contribution.reject(request.user, rejection_reason)
+        
+        return Response(ContributionSerializer(contribution).data)
+    
+    def list(self, request, *args, **kwargs):
+        """List contributions with filtering (admin only)"""
+        queryset = self.get_queryset()
+        
+        status_filter = request.query_params.get('status')
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+        
+        person_id = request.query_params.get('person')
+        if person_id:
+            queryset = queryset.filter(person_id=person_id)
+        
+        queryset = queryset.order_by('-submitted_at')
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response({
+            'count': queryset.count(),
+            'results': serializer.data
+        })
 
 
 @api_view(['GET'])
@@ -196,8 +342,6 @@ def memorial_index(request):
     data = []
     
     for conflict in conflicts:
-        # Order by class year ascending (earliest first), then by name
-        # Use raw SQL ordering to put nulls last
         casualties = Person.objects.filter(conflict=conflict).extra(
             select={'class_year_null': 'class_year IS NULL'},
             order_by=['class_year_null', 'class_year', 'last_name', 'first_name']
@@ -220,14 +364,55 @@ def search_filters(request):
         'class_years': list(class_years)
     })
 
+
+# Admin-only views for managing contributions
 @api_view(['GET'])
+@permission_classes([permissions.IsAdminUser])
+def pending_contributions(request):
+    """Get all pending contributions for admin review"""
+    contributions = Contribution.objects.filter(status='pending').order_by('-submitted_at')
+    
+    data = []
+    for contrib in contributions:
+        contrib_data = ContributionSerializer(contrib).data
+        contrib_data['person_details'] = PersonListSerializer(contrib.person).data
+        data.append(contrib_data)
+    
+    return Response({
+        'count': contributions.count(),
+        'results': data
+    })
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAdminUser])
+def contribution_stats(request):
+    """Get statistics about contributions"""
+    from django.db.models import Count
+    
+    stats = Contribution.objects.aggregate(
+        total=Count('id'),
+        pending=Count('id', filter=Q(status='pending')),
+        approved=Count('id', filter=Q(status='approved')),
+        rejected=Count('id', filter=Q(status='rejected'))
+    )
+    
+    recent = Contribution.objects.order_by('-submitted_at')[:10]
+    
+    return Response({
+        'stats': stats,
+        'recent': ContributionSerializer(recent, many=True).data
+    })
+
+
+@api_view(['GET'])
+@permission_classes([permissions.IsAdminUser])
 def test_s3_connection(request):
-    """Test S3 configuration in production"""
+    """Test S3 configuration in production - Admin only"""
     try:
         import boto3
         from django.conf import settings
         
-        # Check if credentials are set
         if not settings.AWS_ACCESS_KEY_ID:
             return Response({
                 "error": "AWS_ACCESS_KEY_ID not configured",
@@ -235,7 +420,6 @@ def test_s3_connection(request):
                 "bucket": settings.AWS_STORAGE_BUCKET_NAME
             })
         
-        # Try to connect to S3
         s3_client = boto3.client(
             's3',
             aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
@@ -243,7 +427,6 @@ def test_s3_connection(request):
             region_name=settings.AWS_S3_REGION_NAME
         )
         
-        # List objects
         response = s3_client.list_objects_v2(
             Bucket=settings.AWS_STORAGE_BUCKET_NAME,
             MaxKeys=5
@@ -268,3 +451,59 @@ def test_s3_connection(request):
             "type": type(e).__name__,
             "debug": settings.DEBUG
         }, status=500)
+
+
+@api_view(['POST'])
+@parser_classes([MultiPartParser, FormParser])
+@permission_classes([permissions.AllowAny])
+def create_contribution(request, person_id):
+    """Simple endpoint to create a contribution with CSRF and throttling"""
+    # Apply throttling
+    throttle = AnonRateThrottle()
+    if not throttle.allow_request(request, None):
+        return Response(
+            {"error": "Rate limit exceeded. Please try again later."}, 
+            status=status.HTTP_429_TOO_MANY_REQUESTS
+        )
+    
+    try:
+        person = Person.objects.get(pk=person_id)
+    except Person.DoesNotExist:
+        return Response(
+            {"error": "Person not found"}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    serializer = ContributionCreateSerializer(data=request.data)
+    if not serializer.is_valid():
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    # Validate image if provided
+    image = request.FILES.get('content_image')
+    if image:
+        if image.size > MAX_IMAGE_SIZE:
+            return Response(
+                {"error": f"Image size must be less than {MAX_IMAGE_SIZE // 1024 // 1024}MB"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if image.content_type not in ALLOWED_IMAGE_TYPES:
+            return Response(
+                {"error": f"Image type must be one of: {', '.join(ALLOWED_IMAGE_TYPES)}"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    
+    contribution = serializer.save(person=person)
+    
+    return Response(
+        ContributionSerializer(contribution).data,
+        status=status.HTTP_201_CREATED
+    )
+
+@api_view(['GET'])
+@ensure_csrf_cookie
+def get_csrf_token(request):
+    """Get CSRF token for frontend"""
+    return JsonResponse({
+        'csrfToken': get_token(request)
+    })
