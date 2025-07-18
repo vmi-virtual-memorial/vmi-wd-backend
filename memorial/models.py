@@ -1,5 +1,6 @@
 from django.db import models
 from django.urls import reverse
+from django.utils import timezone
 
 
 class Conflict(models.Model):
@@ -129,3 +130,92 @@ class Person(models.Model):
     
     def get_absolute_url(self):
         return reverse('person-detail', kwargs={'pk': self.pk})
+
+
+class ContributionStatus(models.TextChoices):
+    PENDING = 'pending', 'Pending'
+    APPROVED = 'approved', 'Approved'
+    REJECTED = 'rejected', 'Rejected'
+
+
+class Contribution(models.Model):
+    """Community contributions for person records"""
+    
+    # Link to person
+    person = models.ForeignKey(
+        'Person', 
+        on_delete=models.CASCADE, 
+        related_name='contributions'
+    )
+    
+    # Contributor info
+    contributor_email = models.EmailField(
+        help_text="Email of the person submitting this contribution"
+    )
+    
+    # Content
+    content_type = models.CharField(
+        max_length=10,
+        choices=[
+            ('text', 'Text'),
+            ('image', 'Image'),
+            ('both', 'Both'),
+        ],
+        default='text'
+    )
+    content_text = models.TextField(
+        blank=True,
+        help_text="Text content of the contribution"
+    )
+    content_image = models.ImageField(
+        upload_to='contributions/',
+        blank=True,
+        null=True,
+        help_text="Image contribution"
+    )
+    
+    # Moderation
+    status = models.CharField(
+        max_length=10,
+        choices=ContributionStatus.choices,
+        default=ContributionStatus.PENDING
+    )
+    
+    # Timestamps
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Review info
+    reviewed_by = models.ForeignKey(
+        'auth.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='reviewed_contributions'
+    )
+    rejection_reason = models.TextField(blank=True)
+    
+    class Meta:
+        ordering = ['-submitted_at']
+        indexes = [
+            models.Index(fields=['person', 'status']),
+            models.Index(fields=['status', 'submitted_at']),
+        ]
+    
+    def __str__(self):
+        return f"Contribution for {self.person} by {self.contributor_email} ({self.status})"
+    
+    def approve(self, user):
+        """Approve this contribution"""
+        self.status = ContributionStatus.APPROVED
+        self.reviewed_by = user
+        self.reviewed_at = timezone.now()
+        self.save()
+    
+    def reject(self, user, reason=''):
+        """Reject this contribution"""
+        self.status = ContributionStatus.REJECTED
+        self.reviewed_by = user
+        self.reviewed_at = timezone.now()
+        self.rejection_reason = reason
+        self.save()

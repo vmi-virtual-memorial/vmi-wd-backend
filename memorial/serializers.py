@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Conflict, Person
+from .models import Conflict, Person, Contribution
 
 
 class PersonListSerializer(serializers.ModelSerializer):
@@ -79,3 +79,106 @@ class ConflictDetailSerializer(serializers.ModelSerializer):
             'id', 'name', 'start_year', 'end_year', 
             'description', 'casualty_count', 'order', 'casualties'
         ]
+
+
+# Contribution serializers
+class ContributionSerializer(serializers.ModelSerializer):
+    """Base serializer for contributions"""
+    contributor_email = serializers.EmailField(required=True)
+    reviewed_by_username = serializers.CharField(
+        source='reviewed_by.username', 
+        read_only=True
+    )
+    
+    class Meta:
+        model = Contribution
+        fields = [
+            'id', 'person', 'contributor_email', 'content_type',
+            'content_text', 'content_image', 'status', 'submitted_at',
+            'reviewed_at', 'reviewed_by', 'reviewed_by_username',
+            'rejection_reason'
+        ]
+        read_only_fields = [
+            'id', 'status', 'submitted_at', 'reviewed_at', 
+            'reviewed_by', 'rejection_reason'
+        ]
+
+
+class ContributionCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating contributions"""
+    content_image = serializers.ImageField(required=False, allow_null=True)
+    
+    class Meta:
+        model = Contribution
+        fields = ['contributor_email', 'content_type', 'content_text', 'content_image']
+    
+    def validate(self, data):
+        """Ensure content matches content_type"""
+        content_type = data.get('content_type')
+        
+        if content_type in ['text', 'both'] and not data.get('content_text'):
+            raise serializers.ValidationError(
+                "Text content is required for text contributions"
+            )
+        
+        if content_type in ['image', 'both'] and not data.get('content_image'):
+            raise serializers.ValidationError(
+                "Image is required for image contributions"
+            )
+        
+        return data
+
+
+class ContributionPublicSerializer(serializers.ModelSerializer):
+    """Public view of approved contributions only"""
+    contributor_display = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Contribution
+        fields = [
+            'id', 'content_type', 'content_text', 'content_image',
+            'submitted_at', 'contributor_display'
+        ]
+    
+    def get_contributor_display(self, obj):
+        """Partially mask email for privacy"""
+        email = obj.contributor_email
+        parts = email.split('@')
+        if len(parts) == 2:
+            name = parts[0]
+            if len(name) > 2:
+                masked = name[0] + '*' * (len(name) - 2) + name[-1]
+            else:
+                masked = name[0] + '*'
+            return f"{masked}@{parts[1]}"
+        return "Anonymous"
+
+
+class ContributionReviewSerializer(serializers.Serializer):
+    """Serializer for approving/rejecting contributions"""
+    action = serializers.ChoiceField(choices=['approve', 'reject'])
+    rejection_reason = serializers.CharField(required=False, allow_blank=True)
+    
+    def validate(self, data):
+        if data['action'] == 'reject' and not data.get('rejection_reason'):
+            raise serializers.ValidationError(
+                "Rejection reason is required when rejecting a contribution"
+            )
+        return data
+
+
+class PersonDetailSerializerWithContributions(PersonDetailSerializer):
+    """Person details including approved contributions"""
+    contributions = ContributionPublicSerializer(many=True, read_only=True)
+    
+    class Meta(PersonDetailSerializer.Meta):
+        fields = PersonDetailSerializer.Meta.fields + ['contributions']
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        # Only show approved contributions
+        data['contributions'] = ContributionPublicSerializer(
+            instance.contributions.filter(status='approved'),
+            many=True
+        ).data
+        return data
