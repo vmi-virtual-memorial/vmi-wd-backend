@@ -145,14 +145,17 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
                 from django.http import FileResponse
                 import os
                 file_path = os.path.join(settings.MEDIA_ROOT, person.pdf_key)
-                return FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+                response = FileResponse(open(file_path, 'rb'), content_type='application/pdf')
+                # FIXED: Allow iframe embedding for PDF viewer
+                response['X-Frame-Options'] = 'SAMEORIGIN'
+                return response
             except FileNotFoundError:
                 return Response(
                     {"error": "PDF file not found"}, 
                     status=status.HTTP_404_NOT_FOUND
                 )
         
-        # In production, generate presigned URL
+        # In production, generate presigned URL and redirect to it
         try:
             s3_client = boto3.client(
                 's3',
@@ -171,11 +174,12 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
                 ExpiresIn=3600  # URL expires in 1 hour
             )
             
-            # Return JSON with the URL instead of redirecting
-            return Response({
-                'pdf_url': presigned_url,
-                'filename': f"{person.last_name}_{person.first_name}_memorial.pdf"
-            })
+            # FIXED: Return a redirect response instead of JSON
+            # This allows the iframe to load the PDF directly from S3
+            response = HttpResponseRedirect(presigned_url)
+            # Allow iframe embedding for PDF viewer
+            response['X-Frame-Options'] = 'SAMEORIGIN'
+            return response
             
         except ClientError as e:
             print(f"Error generating presigned URL: {e}")
