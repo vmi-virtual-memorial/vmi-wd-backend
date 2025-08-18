@@ -49,9 +49,9 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
     
     def get_serializer_class(self):
         if self.action == 'list':
-            return PersonListSerializer
+            return PersonDetailSerializer
         elif self.action == 'search':
-            return PersonSearchSerializer
+            return PersonDetailSerializer
         return PersonDetailSerializerWithContributions
     
     def get_queryset(self):
@@ -128,7 +128,7 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
             order_by=['class_year_null', 'class_year', 'last_name', 'first_name']
         )
         
-        serializer = PersonSearchSerializer(queryset, many=True)
+        serializer = PersonDetailSerializer(queryset, many=True)
         return Response({
             'count': queryset.count(),
             'results': serializer.data
@@ -347,7 +347,7 @@ def memorial_index(request):
             order_by=['class_year_null', 'class_year', 'last_name', 'first_name']
         )
         conflict_data = ConflictSerializer(conflict).data
-        conflict_data['casualties'] = PersonListSerializer(casualties, many=True).data
+        conflict_data['casualties'] = PersonDetailSerializer(casualties, many=True).data
         data.append(conflict_data)
     
     return Response(data)
