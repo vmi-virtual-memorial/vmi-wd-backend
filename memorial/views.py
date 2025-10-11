@@ -46,27 +46,34 @@ class ConflictViewSet(viewsets.ReadOnlyModelViewSet):
 class PersonViewSet(viewsets.ReadOnlyModelViewSet):
     """API endpoints for people"""
     queryset = Person.objects.all()
-    
+
     def get_serializer_class(self):
         if self.action == 'list':
             return PersonDetailSerializer
         elif self.action == 'search':
             return PersonDetailSerializer
         return PersonDetailSerializerWithContributions
-    
+
+    def paginate_queryset(self, queryset):
+        """Override pagination to allow bypassing it with ?paginate=false"""
+        paginate = self.request.query_params.get('paginate', 'true').lower()
+        if paginate == 'false':
+            return None
+        return super().paginate_queryset(queryset)
+
     def get_queryset(self):
         queryset = super().get_queryset()
         conflict_id = self.request.query_params.get('conflict', None)
-        
+
         if conflict_id is not None:
             queryset = queryset.filter(conflict_id=conflict_id)
             return queryset.extra(
                 select={'class_year_null': 'class_year IS NULL'},
                 order_by=['class_year_null', 'class_year', 'last_name', 'first_name']
             )
-        
+
         order_by = self.request.query_params.get('order_by', 'name')
-        
+
         if order_by == 'class_year':
             return queryset.order_by('class_year', 'last_name', 'first_name')
         else:
