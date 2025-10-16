@@ -46,27 +46,34 @@ class ConflictViewSet(viewsets.ReadOnlyModelViewSet):
 class PersonViewSet(viewsets.ReadOnlyModelViewSet):
     """API endpoints for people"""
     queryset = Person.objects.all()
-    
+
     def get_serializer_class(self):
         if self.action == 'list':
             return PersonDetailSerializer
         elif self.action == 'search':
             return PersonDetailSerializer
         return PersonDetailSerializerWithContributions
-    
+
+    def paginate_queryset(self, queryset):
+        """Override pagination to allow bypassing it with ?paginate=false"""
+        paginate = self.request.query_params.get('paginate', 'true').lower()
+        if paginate == 'false':
+            return None
+        return super().paginate_queryset(queryset)
+
     def get_queryset(self):
         queryset = super().get_queryset()
         conflict_id = self.request.query_params.get('conflict', None)
-        
+
         if conflict_id is not None:
             queryset = queryset.filter(conflict_id=conflict_id)
             return queryset.extra(
                 select={'class_year_null': 'class_year IS NULL'},
                 order_by=['class_year_null', 'class_year', 'last_name', 'first_name']
             )
-        
+
         order_by = self.request.query_params.get('order_by', 'name')
-        
+
         if order_by == 'class_year':
             return queryset.order_by('class_year', 'last_name', 'first_name')
         else:
@@ -76,7 +83,12 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
     def search(self, request):
         """Search and filter people"""
         queryset = Person.objects.all()
-        
+
+        # Memorial document filter
+        has_document = request.query_params.get('has_document', '').lower()
+        if has_document == 'true':
+            queryset = queryset.exclude(pdf_key='').exclude(pdf_key__isnull=True)
+
         # Name search (across all name fields)
         search_term = request.query_params.get('q', '')
         if search_term:
@@ -86,26 +98,26 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
                 Q(last_name__icontains=search_term) |
                 Q(suffix__icontains=search_term)
             )
-        
+
         # Class year filter (can be comma-separated)
         class_years = request.query_params.get('class_year', '')
         if class_years:
             years = [int(y.strip()) for y in class_years.split(',') if y.strip().isdigit()]
             if years:
                 queryset = queryset.filter(class_year__in=years)
-        
+
         # Conflict filter (can be comma-separated)
         conflict_ids = request.query_params.get('conflict', '')
         if conflict_ids:
             ids = [int(id.strip()) for id in conflict_ids.split(',') if id.strip().isdigit()]
             if ids:
                 queryset = queryset.filter(conflict_id__in=ids)
-        
+
         # Date range filter
         date_from = request.query_params.get('date_from', '')
         date_to = request.query_params.get('date_to', '')
         no_date = request.query_params.get('no_date', '').lower() == 'true'
-        
+
         if no_date:
             queryset = queryset.filter(date_of_death__isnull=True)
         else:
@@ -115,19 +127,19 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
                     queryset = queryset.filter(date_of_death__gte=date_from_parsed)
                 except ValueError:
                     pass
-            
+
             if date_to:
                 try:
                     date_to_parsed = datetime.strptime(date_to, '%Y-%m-%d').date()
                     queryset = queryset.filter(date_of_death__lte=date_to_parsed)
                 except ValueError:
                     pass
-        
+
         queryset = queryset.extra(
             select={'class_year_null': 'class_year IS NULL'},
             order_by=['class_year_null', 'class_year', 'last_name', 'first_name']
         )
-        
+
         serializer = PersonDetailSerializer(queryset, many=True)
         return Response({
             'count': queryset.count(),
