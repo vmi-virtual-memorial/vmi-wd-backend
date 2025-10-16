@@ -89,7 +89,7 @@ class PersonAdmin(admin.ModelAdmin):
             'fields': ('first_name', 'middle_name', 'last_name', 'suffix')
         }),
         ('VMI Information', {
-            'fields': ('class_year',)
+            'fields': ('class_year', 'class_letter')
         }),
         ('Military Information', {
             'fields': ('conflict', 'rank', 'unit')

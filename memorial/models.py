@@ -34,9 +34,15 @@ class Person(models.Model):
     
     # VMI info
     class_year = models.IntegerField(
-        null=True, 
+        null=True,
         blank=True,
         help_text="VMI graduation year (e.g., 1965)"
+    )
+    class_letter = models.CharField(
+        max_length=1,
+        blank=True,
+        default='',
+        help_text="Optional letter suffix for class year (e.g., 'M' for 1956M)"
     )
     
     # Military info
@@ -78,7 +84,17 @@ class Person(models.Model):
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
+    def clean(self):
+        """Validate and normalize class_letter"""
+        from django.core.exceptions import ValidationError
+        if self.class_letter:
+            self.class_letter = self.class_letter.upper().strip()
+            if len(self.class_letter) > 1 or not self.class_letter.isalpha():
+                raise ValidationError({
+                    'class_letter': 'Must be a single letter (A-Z)'
+                })
+
     class Meta:
         ordering = ['last_name', 'first_name']
         verbose_name_plural = "People"
@@ -90,7 +106,7 @@ class Person(models.Model):
         if self.suffix:
             full_name = f"{full_name} {self.suffix}"
         if self.class_year:
-            full_name = f"{full_name} '{str(self.class_year)[2:]}"  # e.g., John Doe '65
+            full_name = f"{full_name} '{str(self.class_year)[2:]}{self.class_letter}"  # e.g., John Doe '65M
         return full_name
     
     @property
@@ -112,7 +128,7 @@ class Person(models.Model):
         """Display name with class year"""
         name = self.display_name
         if self.class_year:
-            name = f"{name} '{str(self.class_year)[2:]}"
+            name = f"{name} '{str(self.class_year)[2:]}{self.class_letter}"
         return name
     
     @property
