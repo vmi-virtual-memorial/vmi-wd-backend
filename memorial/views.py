@@ -67,10 +67,7 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
 
         if conflict_id is not None:
             queryset = queryset.filter(conflict_id=conflict_id)
-            return queryset.extra(
-                select={'class_year_null': 'class_year IS NULL'},
-                order_by=['class_year_null', 'class_year', 'last_name', 'first_name']
-            )
+            return queryset.order_by('last_name', 'first_name')
 
         order_by = self.request.query_params.get('order_by', 'name')
 
@@ -135,10 +132,7 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
                 except ValueError:
                     pass
 
-        queryset = queryset.extra(
-            select={'class_year_null': 'class_year IS NULL'},
-            order_by=['class_year_null', 'class_year', 'last_name', 'first_name']
-        )
+        queryset = queryset.order_by('last_name', 'first_name')
 
         serializer = PersonDetailSerializer(queryset, many=True)
         return Response({
@@ -354,10 +348,7 @@ def memorial_index(request):
     data = []
     
     for conflict in conflicts:
-        casualties = Person.objects.filter(conflict=conflict).extra(
-            select={'class_year_null': 'class_year IS NULL'},
-            order_by=['class_year_null', 'class_year', 'last_name', 'first_name']
-        )
+        casualties = Person.objects.filter(conflict=conflict).order_by('last_name', 'first_name')
         conflict_data = ConflictSerializer(conflict).data
         conflict_data['casualties'] = PersonDetailSerializer(casualties, many=True).data
         data.append(conflict_data)
