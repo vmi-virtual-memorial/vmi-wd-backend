@@ -346,13 +346,25 @@ def memorial_index(request):
     """Get all conflicts with their casualties for the memorial index"""
     conflicts = Conflict.objects.all()
     data = []
-    
+
+    # Get sort parameter from query params (default to alphabetical)
+    sort_by = request.query_params.get('sort', 'alphabetical')
+
     for conflict in conflicts:
-        casualties = Person.objects.filter(conflict=conflict).order_by('last_name', 'first_name')
+        if sort_by == 'class_year':
+            # Sort by class year (nulls last), then by name
+            casualties = Person.objects.filter(conflict=conflict).extra(
+                select={'class_year_null': 'class_year IS NULL'},
+                order_by=['class_year_null', 'class_year', 'last_name', 'first_name']
+            )
+        else:
+            # Default to alphabetical sorting
+            casualties = Person.objects.filter(conflict=conflict).order_by('last_name', 'first_name')
+
         conflict_data = ConflictSerializer(conflict).data
         conflict_data['casualties'] = PersonDetailSerializer(casualties, many=True).data
         data.append(conflict_data)
-    
+
     return Response(data)
 
 
