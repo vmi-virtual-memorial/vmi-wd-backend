@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Conflict, Person, Contribution
+from .models import Conflict, Person, Contribution, Award, PersonAward
 
 
 class PersonListSerializer(serializers.ModelSerializer):
@@ -7,10 +7,14 @@ class PersonListSerializer(serializers.ModelSerializer):
     display_name = serializers.ReadOnlyField()
     full_display_name = serializers.ReadOnlyField()
     death_date_display = serializers.ReadOnlyField()
+    has_awards = serializers.SerializerMethodField()
 
     class Meta:
         model = Person
-        fields = ['id', 'display_name', 'full_display_name', 'rank', 'unit', 'class_year', 'class_letter', 'death_description', 'death_date_display']
+        fields = ['id', 'display_name', 'full_display_name', 'rank', 'unit', 'class_year', 'class_letter', 'death_description', 'death_date_display', 'has_awards']
+
+    def get_has_awards(self, obj):
+        return obj.person_awards.exists()
 
 
 class PersonDetailSerializer(serializers.ModelSerializer):
@@ -46,14 +50,18 @@ class PersonSearchSerializer(serializers.ModelSerializer):
     conflict_name = serializers.CharField(source='conflict.name', read_only=True)
     conflict_id = serializers.IntegerField(source='conflict.id', read_only=True)
     death_date_display = serializers.ReadOnlyField()
+    has_awards = serializers.SerializerMethodField()
 
     class Meta:
         model = Person
         fields = [
             'id', 'display_name', 'full_display_name', 'class_year', 'class_letter',
             'rank', 'unit', 'date_of_death', 'death_date_display',
-            'conflict_name', 'conflict_id'
+            'conflict_name', 'conflict_id', 'has_awards'
         ]
+
+    def get_has_awards(self, obj):
+        return obj.person_awards.exists()
 
 
 class ConflictSerializer(serializers.ModelSerializer):
@@ -158,7 +166,7 @@ class ContributionReviewSerializer(serializers.Serializer):
     """Serializer for approving/rejecting contributions"""
     action = serializers.ChoiceField(choices=['approve', 'reject'])
     rejection_reason = serializers.CharField(required=False, allow_blank=True)
-    
+
     def validate(self, data):
         if data['action'] == 'reject' and not data.get('rejection_reason'):
             raise serializers.ValidationError(
@@ -167,13 +175,27 @@ class ContributionReviewSerializer(serializers.Serializer):
         return data
 
 
+class PersonAwardSerializer(serializers.ModelSerializer):
+    """Serializer for person awards (used in person detail)"""
+    award_id = serializers.IntegerField(source='award.id', read_only=True)
+    award_name = serializers.CharField(source='award.name', read_only=True)
+    award_image_filename = serializers.CharField(source='award.image_filename', read_only=True)
+
+    class Meta:
+        model = PersonAward
+        fields = [
+            'award_id', 'award_name', 'award_image_filename',
+            'count', 'date_awarded', 'citation'
+        ]
+
+
 class PersonDetailSerializerWithContributions(PersonDetailSerializer):
-    """Person details including approved contributions"""
+    """Person details including approved contributions and awards"""
     contributions = ContributionPublicSerializer(many=True, read_only=True)
-    
+
     class Meta(PersonDetailSerializer.Meta):
-        fields = PersonDetailSerializer.Meta.fields + ['contributions']
-    
+        fields = PersonDetailSerializer.Meta.fields + ['contributions', 'awards']
+
     def to_representation(self, instance):
         data = super().to_representation(instance)
         # Only show approved contributions
@@ -181,4 +203,57 @@ class PersonDetailSerializerWithContributions(PersonDetailSerializer):
             instance.contributions.filter(status='approved'),
             many=True
         ).data
+        # Include awards
+        data['awards'] = PersonAwardSerializer(
+            instance.person_awards.all(),
+            many=True
+        ).data
         return data
+
+
+# Award serializers
+class AwardListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for listing awards"""
+    recipient_count = serializers.ReadOnlyField()
+    total_awards_given = serializers.ReadOnlyField()
+
+    class Meta:
+        model = Award
+        fields = [
+            'id', 'name', 'short_description', 'image_filename',
+            'recipient_count', 'total_awards_given', 'order'
+        ]
+
+
+class AwardRecipientSerializer(serializers.ModelSerializer):
+    """Serializer for recipients shown on award detail page"""
+    person_id = serializers.IntegerField(source='person.id', read_only=True)
+    display_name = serializers.CharField(source='person.display_name', read_only=True)
+    full_display_name = serializers.CharField(source='person.full_display_name', read_only=True)
+    class_year = serializers.IntegerField(source='person.class_year', read_only=True)
+    class_letter = serializers.CharField(source='person.class_letter', read_only=True)
+    conflict_name = serializers.CharField(source='person.conflict.name', read_only=True)
+    pdf_key = serializers.CharField(source='person.pdf_key', read_only=True)
+
+    class Meta:
+        model = PersonAward
+        fields = [
+            'person_id', 'display_name', 'full_display_name',
+            'class_year', 'class_letter', 'conflict_name', 'pdf_key',
+            'count', 'date_awarded', 'citation'
+        ]
+
+
+class AwardDetailSerializer(serializers.ModelSerializer):
+    """Full award details with recipients list"""
+    recipient_count = serializers.ReadOnlyField()
+    total_awards_given = serializers.ReadOnlyField()
+    recipients = AwardRecipientSerializer(source='person_awards', many=True, read_only=True)
+
+    class Meta:
+        model = Award
+        fields = [
+            'id', 'name', 'short_description', 'long_description',
+            'image_filename', 'recipient_count', 'total_awards_given',
+            'order', 'recipients'
+        ]

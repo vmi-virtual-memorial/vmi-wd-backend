@@ -17,13 +17,14 @@ from django.conf import settings
 from PIL import Image
 import io
 
-from .models import Conflict, Person, Contribution
+from .models import Conflict, Person, Contribution, Award
 from .serializers import (
     ConflictSerializer, ConflictDetailSerializer,
     PersonListSerializer, PersonDetailSerializer,
     PersonSearchSerializer, PersonDetailSerializerWithContributions,
     ContributionSerializer, ContributionCreateSerializer,
-    ContributionPublicSerializer, ContributionReviewSerializer
+    ContributionPublicSerializer, ContributionReviewSerializer,
+    AwardListSerializer, AwardDetailSerializer
 )
 
 
@@ -36,11 +37,33 @@ MAX_IMAGE_DIMENSIONS = (4000, 4000)  # Max width/height
 class ConflictViewSet(viewsets.ReadOnlyModelViewSet):
     """API endpoints for conflicts"""
     queryset = Conflict.objects.all()
-    
+
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return ConflictDetailSerializer
         return ConflictSerializer
+
+
+class AwardViewSet(viewsets.ReadOnlyModelViewSet):
+    """API endpoints for awards/decorations"""
+    queryset = Award.objects.all()
+
+    def get_serializer_class(self):
+        if self.action == 'retrieve':
+            return AwardDetailSerializer
+        return AwardListSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Optional: Filter by conflict (awards given to people in that conflict)
+        conflict_id = self.request.query_params.get('conflict')
+        if conflict_id:
+            queryset = queryset.filter(
+                person_awards__person__conflict_id=conflict_id
+            ).distinct()
+
+        return queryset.order_by('order', 'name')
 
 
 class PersonViewSet(viewsets.ReadOnlyModelViewSet):

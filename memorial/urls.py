@@ -3,7 +3,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers as nested_routers
 from .views import (
-    ConflictViewSet, PersonViewSet, ContributionViewSet,
+    ConflictViewSet, PersonViewSet, ContributionViewSet, AwardViewSet,
     memorial_index, search_filters, test_s3_connection,
     pending_contributions, contribution_stats,
     create_contribution, get_csrf_token
@@ -13,6 +13,7 @@ from .views import (
 router = DefaultRouter()
 router.register('conflicts', ConflictViewSet)
 router.register('persons', PersonViewSet)
+router.register('awards', AwardViewSet)
 
 # Nested router for person contributions (admin only except creation)
 persons_router = nested_routers.NestedDefaultRouter(router, 'persons', lookup='person')

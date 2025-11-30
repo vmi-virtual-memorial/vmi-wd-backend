@@ -6,7 +6,7 @@ from django.conf import settings
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from .models import Conflict, Person, Contribution
+from .models import Conflict, Person, Contribution, Award, PersonAward
 import os
 
 
@@ -76,13 +76,22 @@ class ConflictAdmin(admin.ModelAdmin):
     search_fields = ['name']
 
 
+class PersonAwardInline(admin.TabularInline):
+    """Inline for editing awards on Person admin page"""
+    model = PersonAward
+    extra = 1
+    autocomplete_fields = ['award']
+    fields = ['award', 'count', 'date_awarded', 'citation']
+
+
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
     form = PersonAdminForm
-    list_display = ['display_name', 'class_year', 'conflict', 'rank', 'get_death_date_display', 'has_pdf', 'has_description', 'contribution_count']
+    list_display = ['display_name', 'class_year', 'conflict', 'rank', 'get_death_date_display', 'has_pdf', 'has_description', 'contribution_count', 'award_count']
     list_filter = ['conflict', 'class_year', 'rank', 'death_date_precision']
     search_fields = ['first_name', 'last_name', 'unit']
     autocomplete_fields = ['conflict']
+    inlines = [PersonAwardInline]
     
     fieldsets = (
         ('Name', {
@@ -131,7 +140,7 @@ class PersonAdmin(admin.ModelAdmin):
         total = obj.contributions.count()
         approved = obj.contributions.filter(status='approved').count()
         pending = obj.contributions.filter(status='pending').count()
-        
+
         if pending > 0:
             return format_html(
                 '<span style="color: green;">{}</span> / '
@@ -141,6 +150,28 @@ class PersonAdmin(admin.ModelAdmin):
             )
         return f"{approved} / {total}"
     contribution_count.short_description = 'Contributions (A/P/T)'
+
+    def award_count(self, obj):
+        """Show number of awards"""
+        return obj.person_awards.count()
+    award_count.short_description = 'Awards'
+
+
+@admin.register(Award)
+class AwardAdmin(admin.ModelAdmin):
+    list_display = ['name', 'recipient_count', 'order']
+    list_editable = ['order']
+    search_fields = ['name', 'short_description']
+    ordering = ['order', 'name']
+
+    fieldsets = (
+        ('Award Information', {
+            'fields': ('name', 'short_description', 'long_description')
+        }),
+        ('Display', {
+            'fields': ('image_filename', 'order')
+        }),
+    )
 
 
 @admin.register(Contribution)

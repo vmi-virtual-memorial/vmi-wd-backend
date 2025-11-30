@@ -76,11 +76,19 @@ class Person(models.Model):
     
     # Memorial content
     pdf_key = models.CharField(
-        max_length=500, 
+        max_length=500,
         blank=True,
         help_text="S3 key for the memorial PDF"
     )
-    
+
+    # Awards (M2M through PersonAward)
+    awards = models.ManyToManyField(
+        'Award',
+        through='PersonAward',
+        related_name='recipients',
+        blank=True
+    )
+
     # Metadata
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -146,6 +154,95 @@ class Person(models.Model):
     
     def get_absolute_url(self):
         return reverse('person-detail', kwargs={'pk': self.pk})
+
+
+class Award(models.Model):
+    """Represents a military award or decoration for heroism/gallantry"""
+    name = models.CharField(
+        max_length=200,
+        unique=True,
+        help_text="Full name of the award (e.g., 'Medal of Honor (Army)')"
+    )
+    short_description = models.TextField(
+        help_text="Brief description for display on cards (1-2 sentences)"
+    )
+    long_description = models.TextField(
+        help_text="Detailed description for the award detail page"
+    )
+    image_filename = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="Image slug (e.g., 'MoHArmy' maps to '/MoHArmy.jpg' on frontend)"
+    )
+    order = models.IntegerField(
+        default=0,
+        help_text="Display order (lower numbers appear first)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'name']
+        verbose_name = "Award"
+        verbose_name_plural = "Awards"
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def recipient_count(self):
+        """Total number of unique recipients"""
+        return self.person_awards.values('person').distinct().count()
+
+    @property
+    def total_awards_given(self):
+        """Total awards given (including multiple to same person)"""
+        from django.db.models import Sum
+        result = self.person_awards.aggregate(total=Sum('count'))
+        return result['total'] or 0
+
+
+class PersonAward(models.Model):
+    """Through model for Person-Award many-to-many relationship"""
+    person = models.ForeignKey(
+        Person,
+        on_delete=models.CASCADE,
+        related_name='person_awards'
+    )
+    award = models.ForeignKey(
+        Award,
+        on_delete=models.CASCADE,
+        related_name='person_awards'
+    )
+    count = models.PositiveIntegerField(
+        default=1,
+        help_text="Number of times this award was received"
+    )
+    date_awarded = models.DateField(
+        null=True,
+        blank=True,
+        help_text="Date the award was received (if known)"
+    )
+    citation = models.TextField(
+        blank=True,
+        help_text="Citation or specific details for this award"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['person', 'award']
+        ordering = ['award__order', 'award__name']
+        verbose_name = "Person Award"
+        verbose_name_plural = "Person Awards"
+        indexes = [
+            models.Index(fields=['person', 'award']),
+            models.Index(fields=['award']),
+        ]
+
+    def __str__(self):
+        count_str = f" (x{self.count})" if self.count > 1 else ""
+        return f"{self.person} - {self.award}{count_str}"
 
 
 class ContributionStatus(models.TextChoices):
