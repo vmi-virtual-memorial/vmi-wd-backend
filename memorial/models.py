@@ -12,7 +12,7 @@ class Conflict(models.Model):
     order = models.IntegerField(default=0)  # for custom sorting
     
     class Meta:
-        ordering = ['order', 'start_year']
+        ordering = ['order', '-start_year']
     
     def __str__(self):
         if self.end_year:
