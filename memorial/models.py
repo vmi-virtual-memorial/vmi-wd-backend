@@ -39,10 +39,10 @@ class Person(models.Model):
         help_text="VMI graduation year (e.g., 1965)"
     )
     class_letter = models.CharField(
-        max_length=1,
+        max_length=2,
         blank=True,
         default='',
-        help_text="Optional letter suffix for class year (e.g., 'M' for 1956M)"
+        help_text="Optional one- or two-letter suffix for class year (e.g., 'M' for 1956M, 'MS' for 1956MS)"
     )
     
     # Military info
@@ -98,9 +98,9 @@ class Person(models.Model):
         from django.core.exceptions import ValidationError
         if self.class_letter:
             self.class_letter = self.class_letter.upper().strip()
-            if len(self.class_letter) > 1 or not self.class_letter.isalpha():
+            if len(self.class_letter) > 2 or not self.class_letter.isascii() or not self.class_letter.isalpha():
                 raise ValidationError({
-                    'class_letter': 'Must be a single letter (A-Z)'
+                    'class_letter': 'Must be one or two letters (A-Z)'
                 })
 
     class Meta:
