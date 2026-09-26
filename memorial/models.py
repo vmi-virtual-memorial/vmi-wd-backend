@@ -39,10 +39,10 @@ class Person(models.Model):
         help_text="VMI graduation year (e.g., 1965)"
     )
     class_letter = models.CharField(
-        max_length=1,
+        max_length=2,
         blank=True,
         default='',
-        help_text="Optional letter suffix for class year (e.g., 'M' for 1956M)"
+        help_text="Optional one- or two-letter suffix for class year (e.g., 'M' for 1956M, 'MS' for 1956MS)"
     )
     
     # Military info
@@ -98,9 +98,9 @@ class Person(models.Model):
         from django.core.exceptions import ValidationError
         if self.class_letter:
             self.class_letter = self.class_letter.upper().strip()
-            if len(self.class_letter) > 1 or not self.class_letter.isalpha():
+            if len(self.class_letter) > 2 or not self.class_letter.isascii() or not self.class_letter.isalpha():
                 raise ValidationError({
-                    'class_letter': 'Must be a single letter (A-Z)'
+                    'class_letter': 'Must be one or two letters (A-Z)'
                 })
 
     class Meta:
@@ -114,8 +114,17 @@ class Person(models.Model):
         if self.suffix:
             full_name = f"{full_name} {self.suffix}"
         if self.class_year:
-            full_name = f"{full_name} '{str(self.class_year)[2:]}{self.class_letter}"  # e.g., John Doe '65M
+            full_name = f"{full_name} {self.class_year_display}"  # e.g., John Doe '65M
         return full_name
+
+    @property
+    def class_year_display(self):
+        """Class year with letter; abbreviated ('42M) only for the 1900s, else full (1862M)"""
+        if not self.class_year:
+            return ''
+        if 1900 <= self.class_year <= 1999:
+            return f"'{self.class_year % 100:02d}{self.class_letter}"
+        return f"{self.class_year}{self.class_letter}"
     
     @property
     def display_name(self):
@@ -136,7 +145,7 @@ class Person(models.Model):
         """Display name with class year"""
         name = self.display_name
         if self.class_year:
-            name = f"{name} '{str(self.class_year)[2:]}{self.class_letter}"
+            name = f"{name} {self.class_year_display}"
         return name
     
     @property
