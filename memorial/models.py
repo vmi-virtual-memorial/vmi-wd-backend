@@ -114,8 +114,17 @@ class Person(models.Model):
         if self.suffix:
             full_name = f"{full_name} {self.suffix}"
         if self.class_year:
-            full_name = f"{full_name} '{str(self.class_year)[2:]}{self.class_letter}"  # e.g., John Doe '65M
+            full_name = f"{full_name} {self.class_year_display}"  # e.g., John Doe '65M
         return full_name
+
+    @property
+    def class_year_display(self):
+        """Class year with letter; abbreviated ('42M) only for the 1900s, else full (1862M)"""
+        if not self.class_year:
+            return ''
+        if 1900 <= self.class_year <= 1999:
+            return f"'{self.class_year % 100:02d}{self.class_letter}"
+        return f"{self.class_year}{self.class_letter}"
     
     @property
     def display_name(self):
@@ -136,7 +145,7 @@ class Person(models.Model):
         """Display name with class year"""
         name = self.display_name
         if self.class_year:
-            name = f"{name} '{str(self.class_year)[2:]}{self.class_letter}"
+            name = f"{name} {self.class_year_display}"
         return name
     
     @property
