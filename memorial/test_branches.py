@@ -1,6 +1,11 @@
-from django.test import SimpleTestCase
+from django.contrib.admin.sites import AdminSite
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.test import SimpleTestCase, TestCase
 
+from .admin import PersonAdmin
 from .branches import BRANCH_ALIASES, Branch, _tokens, infer_branch
+from .models import Conflict, Person
 
 
 class TokenTests(SimpleTestCase):
@@ -130,3 +135,61 @@ class AliasTests(SimpleTestCase):
             with self.subTest(branch=branch):
                 self.assertTrue(aliases)
                 self.assertTrue(all(a == a.lower() for a in aliases))
+
+
+class EffectiveBranchTests(TestCase):
+    def setUp(self):
+        self.conflict = Conflict.objects.create(name='World War II', start_year=1941, end_year=1945)
+
+    def person(self, **kwargs):
+        return Person.objects.create(first_name='A', last_name='B', conflict=self.conflict, **kwargs)
+
+    def test_defaults_blank_and_inferred(self):
+        person = self.person(rank='Captain USMC')
+        self.assertEqual(person.branch, '')
+        self.assertEqual(person.effective_branch, Branch.MARINES)
+
+    def test_stored_branch_overrides_inference(self):
+        person = self.person(rank='Captain USA', branch=Branch.ARMY_AIR)
+        self.assertEqual(person.effective_branch, Branch.ARMY_AIR)
+
+    def test_unknown_stays_blank(self):
+        self.assertEqual(self.person(rank='Private').effective_branch, '')
+
+    def test_invalid_choice_rejected(self):
+        person = Person(first_name='A', last_name='B', conflict=self.conflict, branch='SPACE')
+        with self.assertRaises(ValidationError):
+            person.full_clean()
+
+
+class BranchAdminTests(TestCase):
+    def setUp(self):
+        conflict = Conflict.objects.create(name='Vietnam War', start_year=1955, end_year=1975)
+        make = lambda last, **kw: Person.objects.create(first_name='A', last_name=last, conflict=conflict, **kw)
+        self.manual = make('Manual', rank='Captain', branch=Branch.NAVY)
+        self.inferred = make('Inferred', rank='Captain USMC')
+        self.missing = make('Missing', rank='Private')
+        user = User.objects.create_superuser('admin', 'admin@example.com', 'pw')
+        self.client.force_login(user)
+
+    def changelist(self, query=''):
+        response = self.client.get(f'/admin/memorial/person/{query}')
+        self.assertEqual(response.status_code, 200)
+        return {p.id for p in response.context['cl'].queryset}
+
+    def test_status_filter(self):
+        self.assertEqual(self.changelist('?branch_status=set'), {self.manual.id})
+        self.assertEqual(self.changelist('?branch_status=inferred'), {self.inferred.id})
+        self.assertEqual(self.changelist('?branch_status=missing'), {self.missing.id})
+        self.assertEqual(len(self.changelist()), 3)
+
+    def test_branch_column_marks_inferred(self):
+        admin = PersonAdmin(Person, AdminSite())
+        self.assertEqual(admin.get_branch(self.manual), 'U.S. Navy')
+        self.assertIn('(inferred)', admin.get_branch(self.inferred))
+        self.assertIn('U.S. Marine Corps', admin.get_branch(self.inferred))
+        self.assertEqual(admin.get_branch(self.missing), '—')
+
+    def test_change_form_has_branch_field(self):
+        response = self.client.get(f'/admin/memorial/person/{self.inferred.id}/change/')
+        self.assertContains(response, 'name="branch"')
