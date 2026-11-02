@@ -180,9 +180,12 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle'
     ],
+    # Reads are generous: every page view is an API call and a campus NAT shares one IP.
+    # Writes get their own strict scope (memorial.throttles.ContributionRateThrottle).
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '60/hour',    # Anonymous users: 60 requests per hour
-        'user': '1000/hour'   # Authenticated users: 1000 per hour
+        'anon': '1200/hour',       # Anonymous reads per IP
+        'user': '5000/hour',       # Authenticated (admin) users
+        'contribute': '20/hour',   # Public contribution submissions per client
     }
 }
 

@@ -3,7 +3,6 @@ from rest_framework.decorators import action, api_view, permission_classes, auth
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.middleware.csrf import get_token
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
@@ -24,6 +23,7 @@ import io
 
 from .models import Conflict, Person, Contribution, Award
 from .search_index import build_search_index
+from .throttles import ContributionRateThrottle
 from .serializers import (
     ConflictSerializer, ConflictDetailSerializer,
     PersonListSerializer, PersonDetailSerializer,
@@ -265,7 +265,7 @@ class ContributionViewSet(viewsets.ModelViewSet):
     def get_throttles(self):
         """Apply throttling to creation"""
         if self.action == 'create':
-            return [AnonRateThrottle()]
+            return [ContributionRateThrottle()]
         return []
     
     def validate_image(self, image_file):
@@ -516,12 +516,16 @@ def test_s3_connection(request):
 def create_contribution(request, person_id):
     """Simple endpoint to create a contribution with CSRF and throttling"""
     # Apply throttling
-    throttle = AnonRateThrottle()
+    throttle = ContributionRateThrottle()
     if not throttle.allow_request(request, None):
-        return Response(
-            {"error": "Rate limit exceeded. Please try again later."}, 
+        response = Response(
+            {"error": "Rate limit exceeded. Please try again later."},
             status=status.HTTP_429_TOO_MANY_REQUESTS
         )
+        wait = throttle.wait()
+        if wait is not None:
+            response['Retry-After'] = str(int(wait) + 1)
+        return response
     
     try:
         person = Person.objects.get(pk=person_id)
