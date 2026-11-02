@@ -30,8 +30,8 @@ jobs:
           cache: pip
       - run: pip install -r requirements.txt coverage
       - run: python manage.py migrate --noinput
-      - run: coverage run --source=memorial manage.py test memorial
-      - run: coverage report
+      - run: coverage run manage.py test memorial
+      - run: coverage report  # floor in .coveragerc
 
   test-sqlite:
     strategy:
