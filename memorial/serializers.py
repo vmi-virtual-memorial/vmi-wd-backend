@@ -43,6 +43,20 @@ class PersonDetailSerializer(serializers.ModelSerializer):
         return None
 
 
+class PersonSearchResultSerializer(PersonDetailSerializer):
+    """Search page results: full details plus effective branch and award flag"""
+    branch = serializers.CharField(source='effective_branch', read_only=True)
+    has_awards = serializers.SerializerMethodField()
+
+    class Meta(PersonDetailSerializer.Meta):
+        fields = PersonDetailSerializer.Meta.fields + ['branch', 'has_awards']
+
+    def get_has_awards(self, obj):
+        # Annotated by the search view to avoid a query per row
+        flag = getattr(obj, 'has_awards_flag', None)
+        return obj.person_awards.exists() if flag is None else flag
+
+
 class PersonSearchSerializer(serializers.ModelSerializer):
     """Serializer for search results"""
     display_name = serializers.ReadOnlyField()
