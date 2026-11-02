@@ -60,7 +60,6 @@ class Person(models.Model):
         choices=Branch.choices,
         blank=True,
         default='',
-        db_index=True,
         help_text="Service branch. Leave blank to infer it from rank/unit; set it to override the inference."
     )
     date_of_death = models.DateField(null=True, blank=True)
