@@ -37,7 +37,8 @@ def build_search_index():
             'id': c.id, 'name': c.name, 'start_year': c.start_year, 'end_year': c.end_year,
             'casualty_count': c.n,
         }
-        for c in Conflict.objects.annotate(n=Count('casualties'))
+        # Explicit order: Meta.ordering is ignored on GROUP BY (aggregate) queries.
+        for c in Conflict.objects.annotate(n=Count('casualties')).order_by('order', '-start_year')
     ]
 
     awards = [
