@@ -11,6 +11,11 @@ from django.db.models import Q
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from datetime import datetime
+import hashlib
+import json
+from django.utils.cache import get_conditional_response, patch_cache_control
+from django.utils.http import quote_etag
+from django.views.decorators.gzip import gzip_page
 import boto3
 from botocore.exceptions import ClientError
 from django.conf import settings
@@ -18,6 +23,7 @@ from PIL import Image
 import io
 
 from .models import Conflict, Person, Contribution, Award
+from .search_index import build_search_index
 from .serializers import (
     ConflictSerializer, ConflictDetailSerializer,
     PersonListSerializer, PersonDetailSerializer,
@@ -401,6 +407,19 @@ def search_filters(request):
         'conflicts': list(conflicts),
         'class_years': list(class_years)
     })
+
+
+@gzip_page
+@api_view(['GET'])
+def search_index(request):
+    """Compact snapshot for the frontend's in-browser search; gzipped, cacheable, ETag-validated"""
+    body = json.dumps(build_search_index(), ensure_ascii=False, separators=(',', ':')).encode()
+    etag = quote_etag(hashlib.sha256(body).hexdigest()[:32])
+    response = HttpResponse(body, content_type='application/json; charset=utf-8')
+    response['ETag'] = etag
+    patch_cache_control(response, public=True, max_age=300, stale_while_revalidate=86400)
+    # Returns a 304 (keeping ETag/Cache-Control) when If-None-Match matches, weak or strong.
+    return get_conditional_response(request, etag=etag, response=response)
 
 
 # Admin-only views for managing contributions
