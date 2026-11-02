@@ -6,7 +6,7 @@ from rest_framework.authentication import SessionAuthentication
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.middleware.csrf import get_token
 from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
 from datetime import datetime
@@ -21,18 +21,27 @@ from django.conf import settings
 from PIL import Image
 import io
 
-from .models import Conflict, Person, Contribution, Award
+from .branches import Branch, infer_branch
+from .models import Conflict, Person, Contribution, Award, PersonAward
 from .search_index import build_search_index
 from .throttles import ContributionRateThrottle
 from .serializers import (
     ConflictSerializer, ConflictDetailSerializer,
     PersonListSerializer, PersonDetailSerializer,
-    PersonSearchSerializer, PersonDetailSerializerWithContributions,
+    PersonSearchSerializer, PersonSearchResultSerializer, PersonDetailSerializerWithContributions,
     ContributionSerializer, ContributionCreateSerializer,
     ContributionPublicSerializer, ContributionReviewSerializer,
     AwardListSerializer, AwardDetailSerializer
 )
 
+
+# Text fields searchable via persons/search/?q=...&in=<scopes>
+SEARCH_SCOPES = {
+    'name': ['first_name', 'middle_name', 'last_name', 'suffix'],
+    'rank': ['rank'],
+    'unit': ['unit'],
+    'cod': ['death_description'],
+}
 
 # Constants for contribution validation
 MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10MB
@@ -80,7 +89,7 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
         if self.action == 'list':
             return PersonDetailSerializer
         elif self.action == 'search':
-            return PersonDetailSerializer
+            return PersonSearchResultSerializer
         return PersonDetailSerializerWithContributions
 
     def paginate_queryset(self, queryset):
@@ -108,22 +117,59 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'])
     def search(self, request):
         """Search and filter people"""
-        queryset = Person.objects.all()
+        params = request.query_params
+        queryset = Person.objects.select_related('conflict').annotate(
+            has_awards_flag=Exists(PersonAward.objects.filter(person=OuterRef('pk')))
+        )
 
         # Memorial document filter
         has_document = request.query_params.get('has_document', '').lower()
         if has_document == 'true':
             queryset = queryset.exclude(pdf_key='').exclude(pdf_key__isnull=True)
 
-        # Name search (across all name fields)
-        search_term = request.query_params.get('q', '')
+        # Text search: every word must match at least one field in scope
+        # (?in=name,rank,unit,cod; names only by default, as before).
+        search_term = params.get('q', '')
         if search_term:
-            queryset = queryset.filter(
-                Q(first_name__icontains=search_term) |
-                Q(middle_name__icontains=search_term) |
-                Q(last_name__icontains=search_term) |
-                Q(suffix__icontains=search_term)
-            )
+            scopes = [x for x in params.get('in', 'name').split(',') if x in SEARCH_SCOPES] or ['name']
+            fields = [f for scope in scopes for f in SEARCH_SCOPES[scope]]
+            for word in search_term.split():
+                match = Q()
+                for field in fields:
+                    match |= Q(**{f'{field}__icontains': word})
+                queryset = queryset.filter(match)
+
+        # Branch filter (comma-separated codes), matched against the effective
+        # branch: stored override, else inferred from rank/unit.
+        branches = {b for b in params.get('branch', '').split(',') if b in Branch.values}
+        if branches:
+            ids = [
+                pk for pk, branch, rank, unit in queryset.values_list('id', 'branch', 'rank', 'unit')
+                if (branch or infer_branch(rank, unit)) in branches
+            ]
+            queryset = queryset.filter(id__in=ids)
+
+        # Award filter: comma-separated award ids, or "any"
+        awards = params.get('award', '')
+        if awards == 'any' or params.get('has_awards', '').lower() == 'true':
+            queryset = queryset.filter(has_awards_flag=True)
+        elif awards:
+            award_ids = [int(a) for a in awards.split(',') if a.strip().isdigit()]
+            if award_ids:
+                queryset = queryset.filter(
+                    Exists(PersonAward.objects.filter(person=OuterRef('pk'), award_id__in=award_ids))
+                )
+
+        for field in ('unit', 'rank'):
+            value = params.get(field, '').strip()
+            if value:
+                queryset = queryset.filter(**{f'{field}__icontains': value})
+
+        # Class year range
+        for param, lookup in (('class_year_from', 'gte'), ('class_year_to', 'lte')):
+            value = params.get(param, '')
+            if value.isdigit():
+                queryset = queryset.filter(**{f'class_year__{lookup}': int(value)})
 
         # Class year filter (can be comma-separated)
         class_years = request.query_params.get('class_year', '')
@@ -163,9 +209,9 @@ class PersonViewSet(viewsets.ReadOnlyModelViewSet):
 
         queryset = queryset.order_by('last_name', 'first_name')
 
-        serializer = PersonDetailSerializer(queryset, many=True)
+        serializer = PersonSearchResultSerializer(queryset, many=True)
         return Response({
-            'count': queryset.count(),
+            'count': len(serializer.data),
             'results': serializer.data
         })
     
