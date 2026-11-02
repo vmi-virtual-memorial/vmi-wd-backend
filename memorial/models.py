@@ -2,6 +2,8 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 
+from .branches import Branch, infer_branch
+
 
 class Conflict(models.Model):
     """Represents a military conflict/war"""
@@ -53,6 +55,14 @@ class Person(models.Model):
     )
     rank = models.CharField(max_length=100, blank=True)
     unit = models.CharField(max_length=200, blank=True)
+    branch = models.CharField(
+        max_length=12,
+        choices=Branch.choices,
+        blank=True,
+        default='',
+        db_index=True,
+        help_text="Service branch. Leave blank to infer it from rank/unit; set it to override the inference."
+    )
     date_of_death = models.DateField(null=True, blank=True)
     
     # Date precision field
@@ -126,6 +136,11 @@ class Person(models.Model):
             return f"'{self.class_year % 100:02d}{self.class_letter}"
         return f"{self.class_year}{self.class_letter}"
     
+    @property
+    def effective_branch(self):
+        """Stored branch if an admin set one, otherwise inferred from rank/unit ('' if unknown)"""
+        return self.branch or infer_branch(self.rank, self.unit)
+
     @property
     def display_name(self):
         """Formatted name for display"""
