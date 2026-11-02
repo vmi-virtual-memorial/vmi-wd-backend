@@ -1,0 +1,10 @@
+[run]
+source = memorial
+omit =
+    memorial/migrations/*
+    memorial/test*.py
+    memorial/tests.py
+
+[report]
+fail_under = 70
+show_missing = false

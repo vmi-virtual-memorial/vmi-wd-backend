@@ -6,6 +6,7 @@ from django.conf import settings
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from .branches import Branch, infer_branch
 from .models import Conflict, Person, Contribution, Award, PersonAward
 import os
 
@@ -84,11 +85,36 @@ class PersonAwardInline(admin.TabularInline):
     fields = ['award', 'count', 'date_awarded', 'citation']
 
 
+class BranchStatusFilter(admin.SimpleListFilter):
+    """Where a person's branch comes from, so admins can find unclassified people"""
+    title = 'branch status'
+    parameter_name = 'branch_status'
+
+    def lookups(self, request, model_admin):
+        return [
+            ('set', 'Set manually'),
+            ('inferred', 'Inferred from rank/unit'),
+            ('missing', 'Unclassified'),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == 'set':
+            return queryset.exclude(branch='')
+        if self.value() in ('inferred', 'missing'):
+            want_inferred = self.value() == 'inferred'
+            ids = [
+                pk for pk, rank, unit in queryset.filter(branch='').values_list('id', 'rank', 'unit')
+                if bool(infer_branch(rank, unit)) == want_inferred
+            ]
+            return queryset.filter(id__in=ids)
+        return queryset
+
+
 @admin.register(Person)
 class PersonAdmin(admin.ModelAdmin):
     form = PersonAdminForm
-    list_display = ['display_name', 'class_year', 'conflict', 'rank', 'get_death_date_display', 'has_pdf', 'has_description', 'contribution_count', 'award_count']
-    list_filter = ['conflict', 'class_year', 'rank', 'death_date_precision']
+    list_display = ['display_name', 'class_year', 'conflict', 'rank', 'get_branch', 'get_death_date_display', 'has_pdf', 'has_description', 'contribution_count', 'award_count']
+    list_filter = ['conflict', BranchStatusFilter, 'branch', 'class_year', 'rank', 'death_date_precision']
     search_fields = ['first_name', 'last_name', 'unit']
     autocomplete_fields = ['conflict']
     inlines = [PersonAwardInline]
@@ -101,7 +127,7 @@ class PersonAdmin(admin.ModelAdmin):
             'fields': ('class_year', 'class_letter')
         }),
         ('Military Information', {
-            'fields': ('conflict', 'rank', 'unit')
+            'fields': ('conflict', 'rank', 'unit', 'branch')
         }),
         ('Death Information', {
             'fields': ('date_of_death', 'death_date_precision'),
@@ -119,6 +145,17 @@ class PersonAdmin(admin.ModelAdmin):
     
     readonly_fields = ['pdf_key']
     
+    def get_branch(self, obj):
+        """Effective branch; inferred values are marked so they can be confirmed or overridden"""
+        if obj.branch:
+            return obj.get_branch_display()
+        inferred = infer_branch(obj.rank, obj.unit)
+        if inferred:
+            return format_html('{} <span style="color: #888;">(inferred)</span>', Branch(inferred).label)
+        return '—'
+    get_branch.short_description = 'Branch'
+    get_branch.admin_order_field = 'branch'
+
     def get_death_date_display(self, obj):
         """Display death date in list view"""
         return obj.death_date_display or 'Unknown'

@@ -4,7 +4,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers as nested_routers
 from .views import (
     ConflictViewSet, PersonViewSet, ContributionViewSet, AwardViewSet,
-    memorial_index, search_filters, test_s3_connection,
+    memorial_index, search_filters, search_index, test_s3_connection,
     pending_contributions, contribution_stats,
     create_contribution, get_csrf_token
 )
@@ -26,6 +26,7 @@ urlpatterns = [
     # Public endpoints
     path('index/', memorial_index, name='memorial-index'),
     path('search-filters/', search_filters, name='search-filters'),
+    path('search-index/', search_index, name='search-index'),
     
     # Contribution creation (public with throttling and CSRF)
     path('persons/<int:person_id>/contributions/', create_contribution, name='create-contribution'),

@@ -5,4 +5,9 @@ __pycache__/
 db.sqlite3
 staticfiles/
 media/dev/*
-.DS_Store.coverage
+.DS_Store
+.coverage
+
+# throwaway test databases
+ci.sqlite3
+e2e.sqlite3

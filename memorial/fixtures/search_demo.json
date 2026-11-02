@@ -1,0 +1,1211 @@
+[
+ {
+  "model": "memorial.conflict",
+  "pk": 1,
+  "fields": {
+   "name": "World War II",
+   "start_year": 1939,
+   "end_year": 1945,
+   "description": "",
+   "order": 5
+  }
+ },
+ {
+  "model": "memorial.conflict",
+  "pk": 2,
+  "fields": {
+   "name": "World War I",
+   "start_year": 1914,
+   "end_year": 1918,
+   "description": "",
+   "order": 6
+  }
+ },
+ {
+  "model": "memorial.conflict",
+  "pk": 3,
+  "fields": {
+   "name": "Civil War",
+   "start_year": 1861,
+   "end_year": 1865,
+   "description": "",
+   "order": 9
+  }
+ },
+ {
+  "model": "memorial.conflict",
+  "pk": 4,
+  "fields": {
+   "name": "Vietnam War",
+   "start_year": 1955,
+   "end_year": 1975,
+   "description": "",
+   "order": 3
+  }
+ },
+ {
+  "model": "memorial.conflict",
+  "pk": 5,
+  "fields": {
+   "name": "Korean War",
+   "start_year": 1950,
+   "end_year": 1953,
+   "description": "",
+   "order": 4
+  }
+ },
+ {
+  "model": "memorial.conflict",
+  "pk": 6,
+  "fields": {
+   "name": "Mexican-American War",
+   "start_year": 1846,
+   "end_year": 1848,
+   "description": "",
+   "order": 11
+  }
+ },
+ {
+  "model": "memorial.conflict",
+  "pk": 7,
+  "fields": {
+   "name": "Spanish-American War & Phillipine Insurrection",
+   "start_year": 1898,
+   "end_year": 1898,
+   "description": "",
+   "order": 7
+  }
+ },
+ {
+  "model": "memorial.conflict",
+  "pk": 8,
+  "fields": {
+   "name": "Gulf War/Operation Desert Storm",
+   "start_year": 1991,
+   "end_year": 1991,
+   "description": "",
+   "order": 2
+  }
+ },
+ {
+  "model": "memorial.conflict",
+  "pk": 9,
+  "fields": {
+   "name": "Global War on Terror",
+   "start_year": 2001,
+   "end_year": 2021,
+   "description": "",
+   "order": 1
+  }
+ },
+ {
+  "model": "memorial.conflict",
+  "pk": 10,
+  "fields": {
+   "name": "Battle of New Market",
+   "start_year": 1864,
+   "end_year": 1864,
+   "description": "",
+   "order": 8
+  }
+ },
+ {
+  "model": "memorial.conflict",
+  "pk": 11,
+  "fields": {
+   "name": "CIVIL WAR - MS CADETS",
+   "start_year": 1861,
+   "end_year": 1865,
+   "description": "",
+   "order": 10
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 101,
+  "fields": {
+   "first_name": "Walter",
+   "middle_name": "Henry",
+   "last_name": "Ashby",
+   "suffix": "",
+   "class_year": 1942,
+   "class_letter": "",
+   "conflict": 1,
+   "rank": "First Lieutenant USAAF",
+   "unit": "339th Bombardment Squadron, 96th Bombardment Group",
+   "branch": "",
+   "date_of_death": "1944-06-06",
+   "death_date_precision": "day",
+   "death_description": "Killed when his B-17 was shot down over Normandy on D-Day while supporting the landings.",
+   "pdf_key": "dev/memorials/ashby_101.pdf",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 1,
+  "fields": {
+   "person": 101,
+   "award": 7,
+   "count": 1,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 102,
+  "fields": {
+   "first_name": "Norman",
+   "middle_name": "Lee",
+   "last_name": "Tate",
+   "suffix": "",
+   "class_year": 1943,
+   "class_letter": "",
+   "conflict": 1,
+   "rank": "Second Lieutenant USA",
+   "unit": "Company B, 1st Battalion, 116th Infantry Regiment, 29th Infantry Division",
+   "branch": "",
+   "date_of_death": "1944-07-10",
+   "death_date_precision": "day",
+   "death_description": "Killed in action in the hedgerows near Saint-Lo.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 103,
+  "fields": {
+   "first_name": "Calvin",
+   "middle_name": "Ross",
+   "last_name": "Jackson",
+   "suffix": "Jr.",
+   "class_year": 1941,
+   "class_letter": "",
+   "conflict": 1,
+   "rank": "Captain USMC",
+   "unit": "Company C, 1st Battalion, 7th Marines, 1st Marine Division",
+   "branch": "",
+   "date_of_death": "1942-10-25",
+   "death_date_precision": "day",
+   "death_description": "Killed in action on Guadalcanal while repelling a night assault. Awarded the Navy Cross.",
+   "pdf_key": "dev/memorials/jackson_103.pdf",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 2,
+  "fields": {
+   "person": 103,
+   "award": 5,
+   "count": 1,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 104,
+  "fields": {
+   "first_name": "Samuel",
+   "middle_name": "Pierce",
+   "last_name": "Whitlock",
+   "suffix": "",
+   "class_year": 1940,
+   "class_letter": "",
+   "conflict": 1,
+   "rank": "Lieutenant Commander USN",
+   "unit": "USS Liscome Bay (CVE-56)",
+   "branch": "",
+   "date_of_death": "1943-11-24",
+   "death_date_precision": "day",
+   "death_description": "Lost at sea when his escort carrier was torpedoed off the Gilbert Islands. Posthumously awarded the Medal of Honor for remaining at his post.",
+   "pdf_key": "dev/memorials/whitlock_104.pdf",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 3,
+  "fields": {
+   "person": 104,
+   "award": 2,
+   "count": 1,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 105,
+  "fields": {
+   "first_name": "Henry",
+   "middle_name": "Carter",
+   "last_name": "Bligh",
+   "suffix": "",
+   "class_year": 1939,
+   "class_letter": "",
+   "conflict": 1,
+   "rank": "Pilot Officer Royal Canadian Air Force",
+   "unit": "Royal Canadian Air Force",
+   "branch": "",
+   "date_of_death": "1941-05-01",
+   "death_date_precision": "month",
+   "death_description": "Killed in a training crash in Ontario before the United States entered the war.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 106,
+  "fields": {
+   "first_name": "Charles",
+   "middle_name": "Dunmore",
+   "last_name": "Fitch",
+   "suffix": "",
+   "class_year": 1944,
+   "class_letter": "",
+   "conflict": 1,
+   "rank": "Private First Class USA",
+   "unit": "Fox Company, 506th Parachute Infantry Regiment, 101st Airborne Division",
+   "branch": "",
+   "date_of_death": "1944-12-24",
+   "death_date_precision": "day",
+   "death_description": "Killed during the defense of Bastogne in the Battle of the Bulge.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 4,
+  "fields": {
+   "person": 106,
+   "award": 7,
+   "count": 2,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 107,
+  "fields": {
+   "first_name": "Robert",
+   "middle_name": "Ellis",
+   "last_name": "Kemper",
+   "suffix": "",
+   "class_year": 1938,
+   "class_letter": "",
+   "conflict": 1,
+   "rank": "Major USAAF",
+   "unit": "35th Fighter Squadron, 8th Fighter Group",
+   "branch": "",
+   "date_of_death": "1943-01-01",
+   "death_date_precision": "year",
+   "death_description": "Missing in action over New Guinea; remains never recovered.",
+   "pdf_key": "dev/memorials/kemper_107.pdf",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 108,
+  "fields": {
+   "first_name": "William",
+   "middle_name": "Grady",
+   "last_name": "Marsh",
+   "suffix": "",
+   "class_year": 1942,
+   "class_letter": "",
+   "conflict": 1,
+   "rank": "Lieutenant Colonel USA",
+   "unit": "Headquarters, 3rd Battalion, 7th Infantry Regiment, 3rd Infantry Division",
+   "branch": "",
+   "date_of_death": "1944-01-30",
+   "death_date_precision": "day",
+   "death_description": "Killed at Anzio while directing an attack.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 5,
+  "fields": {
+   "person": 108,
+   "award": 4,
+   "count": 1,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 109,
+  "fields": {
+   "first_name": "Arthur",
+   "middle_name": "Paul",
+   "last_name": "Linwood",
+   "suffix": "",
+   "class_year": 1945,
+   "class_letter": "",
+   "conflict": 1,
+   "rank": "Corporal",
+   "unit": "Company H, 3rd Battalion, 5th Marines, 1st Marine Division",
+   "branch": "",
+   "date_of_death": "1945-04-01",
+   "death_date_precision": "day",
+   "death_description": "Killed on Okinawa.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 110,
+  "fields": {
+   "first_name": "Linwood",
+   "middle_name": "Price",
+   "last_name": "Garnett",
+   "suffix": "",
+   "class_year": 1937,
+   "class_letter": "",
+   "conflict": 1,
+   "rank": "Captain USAAC",
+   "unit": "Flight Instructor, Randolph Field, Texas",
+   "branch": "",
+   "date_of_death": "1941-11-01",
+   "death_date_precision": "month",
+   "death_description": "Killed in a training accident.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 201,
+  "fields": {
+   "first_name": "George",
+   "middle_name": "Wendell",
+   "last_name": "Rowan",
+   "suffix": "",
+   "class_year": 1917,
+   "class_letter": "",
+   "conflict": 2,
+   "rank": "Sergeant French Air Force",
+   "unit": "N 124 Lafayette Escadrille",
+   "branch": "",
+   "date_of_death": "1916-09-23",
+   "death_date_precision": "day",
+   "death_description": "Shot down over Alsace while flying with the Lafayette Escadrille. Awarded the Médaille Militaire and the Croix de Guerre.",
+   "pdf_key": "dev/memorials/rowan_201.pdf",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 6,
+  "fields": {
+   "person": 201,
+   "award": 9,
+   "count": 1,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 7,
+  "fields": {
+   "person": 201,
+   "award": 8,
+   "count": 2,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 202,
+  "fields": {
+   "first_name": "Edwin",
+   "middle_name": "Clarke",
+   "last_name": "Haynes",
+   "suffix": "",
+   "class_year": 1914,
+   "class_letter": "",
+   "conflict": 2,
+   "rank": "Captain USA",
+   "unit": "Company \"I\", 116th Infantry, 29th Division, A.E.F.",
+   "branch": "",
+   "date_of_death": "1918-10-12",
+   "death_date_precision": "day",
+   "death_description": "Killed in the Meuse-Argonne offensive.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 8,
+  "fields": {
+   "person": 202,
+   "award": 4,
+   "count": 1,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 203,
+  "fields": {
+   "first_name": "Russell",
+   "middle_name": "Owen",
+   "last_name": "Kettering",
+   "suffix": "",
+   "class_year": 1916,
+   "class_letter": "",
+   "conflict": 2,
+   "rank": "Private, French Foreign Legion",
+   "unit": "2nd Regiment, French Foreign Legion",
+   "branch": "",
+   "date_of_death": "1915-05-09",
+   "death_date_precision": "day",
+   "death_description": "Killed at Artois; awarded the Croix de Guerre.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 9,
+  "fields": {
+   "person": 203,
+   "award": 8,
+   "count": 1,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 204,
+  "fields": {
+   "first_name": "Douglas",
+   "middle_name": "Hart",
+   "last_name": "Pemberton",
+   "suffix": "",
+   "class_year": 1912,
+   "class_letter": "",
+   "conflict": 2,
+   "rank": "Second Lieutenant, B.E.F.",
+   "unit": "Twenty-fourth Battalion, London Regiment, B. E. F",
+   "branch": "",
+   "date_of_death": "1917-06-07",
+   "death_date_precision": "day",
+   "death_description": "Killed at Messines Ridge.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 205,
+  "fields": {
+   "first_name": "Philip",
+   "middle_name": "Ames",
+   "last_name": "Gordon",
+   "suffix": "",
+   "class_year": 1915,
+   "class_letter": "",
+   "conflict": 2,
+   "rank": "Pharmacist Mate, 2nd Class, USN A.E.F.",
+   "unit": "6th Marines, 2nd Division, A.E.F.",
+   "branch": "",
+   "date_of_death": "1918-06-10",
+   "death_date_precision": "day",
+   "death_description": "Killed at Belleau Wood while tending wounded Marines.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 301,
+  "fields": {
+   "first_name": "John",
+   "middle_name": "Mercer",
+   "last_name": "Abernathy",
+   "suffix": "",
+   "class_year": 1859,
+   "class_letter": "",
+   "conflict": 3,
+   "rank": "Colonel CSA",
+   "unit": "52nd Virginia Infantry Regiment, Stonewall Brigade",
+   "branch": "",
+   "date_of_death": "1862-08-30",
+   "death_date_precision": "day",
+   "death_description": "Mortally wounded at Second Manassas while leading his regiment.",
+   "pdf_key": "dev/memorials/abernathy_301.pdf",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 302,
+  "fields": {
+   "first_name": "Andrew",
+   "middle_name": "Jackson",
+   "last_name": "Montrose",
+   "suffix": "",
+   "class_year": 1861,
+   "class_letter": "",
+   "conflict": 3,
+   "rank": "Private CSA",
+   "unit": "Company K, 7th Virginia Cavalry Regiment",
+   "branch": "",
+   "date_of_death": "1863-07-03",
+   "death_date_precision": "day",
+   "death_description": "Killed at Gettysburg.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 303,
+  "fields": {
+   "first_name": "Lewis",
+   "middle_name": "Randolph",
+   "last_name": "Coles",
+   "suffix": "",
+   "class_year": 1858,
+   "class_letter": "",
+   "conflict": 3,
+   "rank": "First Lieutenant, Cutshaw's Battery, C.S.A.",
+   "unit": "Jackson's Battery, Army of Northern Virginia",
+   "branch": "",
+   "date_of_death": "1864-05-12",
+   "death_date_precision": "day",
+   "death_description": "Killed at Spotsylvania.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 304,
+  "fields": {
+   "first_name": "Hiram",
+   "middle_name": "Bell",
+   "last_name": "Whitcomb",
+   "suffix": "",
+   "class_year": 1860,
+   "class_letter": "",
+   "conflict": 3,
+   "rank": "Captain USA",
+   "unit": "4th West Virginia Infantry Rregiment",
+   "branch": "",
+   "date_of_death": "1863-05-22",
+   "death_date_precision": "day",
+   "death_description": "Killed at Vicksburg serving with the Union army.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 305,
+  "fields": {
+   "first_name": "Peyton",
+   "middle_name": "Ames",
+   "last_name": "Loring",
+   "suffix": "",
+   "class_year": 1862,
+   "class_letter": "M",
+   "conflict": 3,
+   "rank": "Private",
+   "unit": "First North Carolina Infantry Regiment",
+   "branch": "",
+   "date_of_death": "1862-06-27",
+   "death_date_precision": "day",
+   "death_description": "Killed at Gaines' Mill.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 306,
+  "fields": {
+   "first_name": "Edmund",
+   "middle_name": "Taylor",
+   "last_name": "Rudd",
+   "suffix": "",
+   "class_year": 1856,
+   "class_letter": "",
+   "conflict": 3,
+   "rank": "",
+   "unit": "",
+   "branch": "CSA",
+   "date_of_death": null,
+   "death_date_precision": "day",
+   "death_description": "",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 401,
+  "fields": {
+   "first_name": "Dennis",
+   "middle_name": "Paul",
+   "last_name": "Carrow",
+   "suffix": "",
+   "class_year": 1966,
+   "class_letter": "",
+   "conflict": 4,
+   "rank": "Captain USA",
+   "unit": "Company C, 1st Battalion, 27th Infantry Regiment, 25th Infantry Division",
+   "branch": "",
+   "date_of_death": "1968-03-01",
+   "death_date_precision": "month",
+   "death_description": "Killed near Hue during the Tet Offensive while leading a relief column. Awarded the Silver Star for gallantry.",
+   "pdf_key": "dev/memorials/carrow_401.pdf",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 10,
+  "fields": {
+   "person": 401,
+   "award": 7,
+   "count": 1,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 402,
+  "fields": {
+   "first_name": "Martin",
+   "middle_name": "Hale",
+   "last_name": "Whitfield",
+   "suffix": "",
+   "class_year": 1965,
+   "class_letter": "",
+   "conflict": 4,
+   "rank": "Second Lieutenant USMC",
+   "unit": "Company A, 1st Battalion, 7th Marines, 1st Marine Division",
+   "branch": "",
+   "date_of_death": "1966-08-18",
+   "death_date_precision": "day",
+   "death_description": "Killed in action near Chu Lai.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 11,
+  "fields": {
+   "person": 402,
+   "award": 7,
+   "count": 1,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 403,
+  "fields": {
+   "first_name": "Douglas",
+   "middle_name": "Wade",
+   "last_name": "Greer",
+   "suffix": "III",
+   "class_year": 1964,
+   "class_letter": "",
+   "conflict": 4,
+   "rank": "First Lieutenant USA",
+   "unit": "D Troop, 1st Squadron, 4th Cavalry, 1st Infantry Division",
+   "branch": "",
+   "date_of_death": "1967-11-07",
+   "death_date_precision": "day",
+   "death_description": "Killed when his helicopter was shot down.",
+   "pdf_key": "dev/memorials/greer_403.pdf",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 12,
+  "fields": {
+   "person": 403,
+   "award": 4,
+   "count": 1,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 13,
+  "fields": {
+   "person": 403,
+   "award": 7,
+   "count": 1,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 404,
+  "fields": {
+   "first_name": "Alan",
+   "middle_name": "Pierce",
+   "last_name": "Voss",
+   "suffix": "",
+   "class_year": 1963,
+   "class_letter": "",
+   "conflict": 4,
+   "rank": "First Lieutenant USAF",
+   "unit": "557th Tactical Fighter Squadron, 12th Tactical Fighter Wing",
+   "branch": "",
+   "date_of_death": "1967-05-14",
+   "death_date_precision": "day",
+   "death_description": "Missing in action after his F-4 went down over North Vietnam; declared dead in 1978.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 14,
+  "fields": {
+   "person": 404,
+   "award": 6,
+   "count": 1,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 405,
+  "fields": {
+   "first_name": "Samuel",
+   "middle_name": "Keene",
+   "last_name": "Pulaski",
+   "suffix": "",
+   "class_year": 1962,
+   "class_letter": "",
+   "conflict": 4,
+   "rank": "Lieutenant Colonel USMC",
+   "unit": "2nd Battalion, 9th Marines, 3rd Marine Division",
+   "branch": "",
+   "date_of_death": "1969-02-20",
+   "death_date_precision": "day",
+   "death_description": "Killed by a mine. Awarded the Bronze Star and Purple Heart.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 406,
+  "fields": {
+   "first_name": "James",
+   "middle_name": "Corbin",
+   "last_name": "Eddings",
+   "suffix": "",
+   "class_year": 1967,
+   "class_letter": "",
+   "conflict": 4,
+   "rank": "Captain USA",
+   "unit": "Company F, 2nd Battalion, 505th Parachute Infantry Regiment, 82nd Airborne Division",
+   "branch": "",
+   "date_of_death": "1968-05-05",
+   "death_date_precision": "day",
+   "death_description": "Prisoner of war who died in captivity.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 501,
+  "fields": {
+   "first_name": "Harold",
+   "middle_name": "Vance",
+   "last_name": "Shelby",
+   "suffix": "",
+   "class_year": 1949,
+   "class_letter": "",
+   "conflict": 5,
+   "rank": "Captain USA",
+   "unit": "Company L, 3rd Battalion, 7th Infantry Regiment, 3rd Infantry Division",
+   "branch": "",
+   "date_of_death": "1950-11-28",
+   "death_date_precision": "day",
+   "death_description": "Killed at the Chosin Reservoir.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 15,
+  "fields": {
+   "person": 501,
+   "award": 7,
+   "count": 1,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 502,
+  "fields": {
+   "first_name": "Eugene",
+   "middle_name": "Ward",
+   "last_name": "Stoddard",
+   "suffix": "",
+   "class_year": 1948,
+   "class_letter": "",
+   "conflict": 5,
+   "rank": "Second Lieutenant USMC",
+   "unit": "Company H, 3rd Battalion, 7th Marines, 1st Marine Division",
+   "branch": "",
+   "date_of_death": "1950-12-02",
+   "death_date_precision": "day",
+   "death_description": "Killed at the Chosin Reservoir.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 503,
+  "fields": {
+   "first_name": "Clifford",
+   "middle_name": "Neal",
+   "last_name": "Hathaway",
+   "suffix": "Jr.",
+   "class_year": 1947,
+   "class_letter": "",
+   "conflict": 5,
+   "rank": "Captain USAF",
+   "unit": "35th Fighter Bomber Squadron, 8th Fighter Bomber Group",
+   "branch": "",
+   "date_of_death": "1951-07-04",
+   "death_date_precision": "day",
+   "death_description": "Shot down while strafing a convoy.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 601,
+  "fields": {
+   "first_name": "Thomas",
+   "middle_name": "Bell",
+   "last_name": "Sanford",
+   "suffix": "",
+   "class_year": 1842,
+   "class_letter": "",
+   "conflict": 6,
+   "rank": "First Lieutenant USA",
+   "unit": "1st Virginia Volunteers",
+   "branch": "",
+   "date_of_death": "1847-02-23",
+   "death_date_precision": "day",
+   "death_description": "Killed at Buena Vista.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 701,
+  "fields": {
+   "first_name": "Allen",
+   "middle_name": "Grayson",
+   "last_name": "Thorpe",
+   "suffix": "",
+   "class_year": 1895,
+   "class_letter": "",
+   "conflict": 7,
+   "rank": "Second Lieutenant USA",
+   "unit": "1st United States Volunteer Cavalry",
+   "branch": "",
+   "date_of_death": "1898-07-01",
+   "death_date_precision": "day",
+   "death_description": "Killed in the charge up San Juan Heights.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 702,
+  "fields": {
+   "first_name": "Franklin",
+   "middle_name": "Ober",
+   "last_name": "Nash",
+   "suffix": "",
+   "class_year": 1890,
+   "class_letter": "",
+   "conflict": 7,
+   "rank": "Civilian",
+   "unit": "Coast & Geodetic Survey Philippines",
+   "branch": "",
+   "date_of_death": "1899-01-01",
+   "death_date_precision": "year",
+   "death_description": "Died of fever while surveying the Philippine coast.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 801,
+  "fields": {
+   "first_name": "Kevin",
+   "middle_name": "Ray",
+   "last_name": "Dalton",
+   "suffix": "",
+   "class_year": 1988,
+   "class_letter": "",
+   "conflict": 8,
+   "rank": "Captain USA",
+   "unit": "3rd Armored Cavalry Regiment",
+   "branch": "",
+   "date_of_death": "1991-02-26",
+   "death_date_precision": "day",
+   "death_description": "Killed when his vehicle struck an unexploded cluster munition.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 901,
+  "fields": {
+   "first_name": "Benjamin",
+   "middle_name": "Hale",
+   "last_name": "Morrow",
+   "suffix": "",
+   "class_year": 2003,
+   "class_letter": "",
+   "conflict": 9,
+   "rank": "First Lieutenant USA",
+   "unit": "Company C, 1st Battalion, 17th Infantry Regiment, 5th Stryker Brigade Combat Team, 2nd Infantry Division",
+   "branch": "",
+   "date_of_death": "2009-08-08",
+   "death_date_precision": "day",
+   "death_description": "Killed by an IED in Kandahar Province, Afghanistan. Awarded the Bronze Star and Purple Heart.",
+   "pdf_key": "dev/memorials/morrow_901.pdf",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 902,
+  "fields": {
+   "first_name": "Christopher",
+   "middle_name": "Neal",
+   "last_name": "Ames",
+   "suffix": "",
+   "class_year": 2004,
+   "class_letter": "",
+   "conflict": 9,
+   "rank": "Captain USMC",
+   "unit": "Weapons Company, 1st Battalion, 7th Marines, 1st Marine Division",
+   "branch": "",
+   "date_of_death": "2004-11-10",
+   "death_date_precision": "day",
+   "death_description": "Killed in Fallujah, Iraq, during Operation Phantom Fury.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.personaward",
+  "pk": 16,
+  "fields": {
+   "person": 902,
+   "award": 7,
+   "count": 1,
+   "date_awarded": null,
+   "citation": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 903,
+  "fields": {
+   "first_name": "Lauren",
+   "middle_name": "Marie",
+   "last_name": "Pike",
+   "suffix": "",
+   "class_year": 2007,
+   "class_letter": "",
+   "conflict": 9,
+   "rank": "Captain USAF",
+   "unit": "75th Expeditionary Airlift Squadron",
+   "branch": "",
+   "date_of_death": "2010-03-01",
+   "death_date_precision": "month",
+   "death_description": "Killed when her aircraft crashed in Afghanistan.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 1001,
+  "fields": {
+   "first_name": "Edward",
+   "middle_name": "Wyatt",
+   "last_name": "Lanier",
+   "suffix": "",
+   "class_year": 1867,
+   "class_letter": "",
+   "conflict": 10,
+   "rank": "Private Company B",
+   "unit": "New Market Cadets",
+   "branch": "",
+   "date_of_death": "1864-05-15",
+   "death_date_precision": "day",
+   "death_description": "Mortally wounded in the charge across the Field of Lost Shoes at New Market.",
+   "pdf_key": "dev/memorials/lanier_1001.pdf",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 1002,
+  "fields": {
+   "first_name": "Joseph",
+   "middle_name": "Cabell",
+   "last_name": "Harlow",
+   "suffix": "",
+   "class_year": 1867,
+   "class_letter": "",
+   "conflict": 10,
+   "rank": "Private Company D",
+   "unit": "New Market Cadets",
+   "branch": "",
+   "date_of_death": "1864-05-15",
+   "death_date_precision": "day",
+   "death_description": "Killed at New Market.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ },
+ {
+  "model": "memorial.person",
+  "pk": 1101,
+  "fields": {
+   "first_name": "Oliver",
+   "middle_name": "Grant",
+   "last_name": "Tisdale",
+   "suffix": "",
+   "class_year": 1863,
+   "class_letter": "MS",
+   "conflict": 11,
+   "rank": "Private CSA",
+   "unit": "Company A, 34th Virginia Infantry",
+   "branch": "",
+   "date_of_death": "1864-06-03",
+   "death_date_precision": "day",
+   "death_description": "Killed at Cold Harbor.",
+   "pdf_key": "",
+   "created_at": "2026-01-01T00:00:00Z",
+   "updated_at": "2026-01-01T00:00:00Z"
+  }
+ }
+]
